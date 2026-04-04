@@ -1,0 +1,56 @@
+using DeviceManagement.API.Data;
+using DeviceManagement.API.Interfaces;
+using DeviceManagement.API.Models;
+using Microsoft.EntityFrameworkCore;
+
+namespace DeviceManagement.API.Repositories;
+
+public class DeviceRepository : IDeviceRepository
+{
+    private readonly AppDbContext _db;
+    public DeviceRepository(AppDbContext db) => _db = db;
+
+    public async Task<IEnumerable<Device>> GetAllAsync() =>
+        await _db.Devices.Include(d => d.AssignedUser).ToListAsync();
+
+    public async Task<Device?> GetByIdAsync(int id) =>
+        await _db.Devices.Include(d => d.AssignedUser).FirstOrDefaultAsync(d => d.Id == id);
+
+    public async Task<Device> CreateAsync(Device device)
+    {
+        _db.Devices.Add(device);
+        await _db.SaveChangesAsync();
+        return device;
+    }
+
+    public async Task<Device?> UpdateAsync(int id, Device updated)
+    {
+        var device = await _db.Devices.FindAsync(id);
+        if (device is null) return null;
+
+        device.Name         = updated.Name;
+        device.Manufacturer = updated.Manufacturer;
+        device.Type         = updated.Type;
+        device.OS           = updated.OS;
+        device.OSVersion    = updated.OSVersion;
+        device.Processor    = updated.Processor;
+        device.RAM          = updated.RAM;
+        device.Description  = updated.Description;
+
+        await _db.SaveChangesAsync();
+        return device;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var device = await _db.Devices.FindAsync(id);
+        if (device is null) return false;
+
+        _db.Devices.Remove(device);
+        await _db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> ExistsAsync(string name, int? excludeId = null) =>
+        await _db.Devices.AnyAsync(d => d.Name == name && d.Id != excludeId);
+}

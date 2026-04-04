@@ -1,5 +1,7 @@
 using DeviceManagement.API.Data;
 using Microsoft.EntityFrameworkCore;
+using DeviceManagement.API.Interfaces;
+using DeviceManagement.API.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +19,8 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
-
+builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -26,9 +29,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 app.UseAuthorization();
 app.MapControllers();
-
+app.MapGet("/test", () => "working");
 app.Run();
