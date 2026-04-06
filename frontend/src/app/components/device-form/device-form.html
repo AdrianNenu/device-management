@@ -1,0 +1,52 @@
+<div class="container">
+  <button class="btn-back" (click)="back()">← Back to list</button>
+
+  <div class="card">
+    <h1>{{ isEdit ? 'Edit Device' : 'Add New Device' }}</h1>
+
+    <div *ngIf="loading" class="state-msg">Loading...</div>
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <div *ngIf="!loading" class="form-grid">
+      <div class="field">
+        <label>Name *</label>
+        <input [(ngModel)]="name" placeholder="e.g. iPhone 15 Pro" />
+      </div>
+      <div class="field">
+        <label>Manufacturer *</label>
+        <input [(ngModel)]="manufacturer" placeholder="e.g. Apple" />
+      </div>
+      <div class="field">
+        <label>Type *</label>
+        <input [(ngModel)]="type" placeholder="e.g. Phone, Tablet" />
+      </div>
+      <div class="field">
+        <label>Operating System *</label>
+        <input [(ngModel)]="os" placeholder="e.g. iOS" />
+      </div>
+      <div class="field">
+        <label>OS Version *</label>
+        <input [(ngModel)]="osVersion" placeholder="e.g. 17.4" />
+      </div>
+      <div class="field">
+        <label>Processor *</label>
+        <input [(ngModel)]="processor" placeholder="e.g. A17 Pro" />
+      </div>
+      <div class="field">
+        <label>RAM (GB) *</label>
+        <input type="number" [(ngModel)]="ram" placeholder="e.g. 8" />
+      </div>
+      <div class="field full">
+        <label>Description</label>
+        <textarea [(ngModel)]="description" rows="3" placeholder="Optional description"></textarea>
+      </div>
+    </div>
+
+    <div *ngIf="!loading" class="actions">
+      <button class="btn-secondary" (click)="back()">Cancel</button>
+      <button class="btn-primary" (click)="submit()" [disabled]="submitting">
+        {{ submitting ? 'Saving...' : (isEdit ? 'Save Changes' : 'Add Device') }}
+      </button>
+    </div>
+  </div>
+</div>

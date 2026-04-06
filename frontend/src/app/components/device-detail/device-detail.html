@@ -1,0 +1,47 @@
+<div class="container">
+  <button class="btn-back" (click)="back()">← Back to list</button>
+
+  <div *ngIf="loading" class="state-msg">Loading...</div>
+  <div *ngIf="error" class="state-msg error">{{ error }}</div>
+
+  <div *ngIf="device" class="card">
+    <div class="card-header">
+      <h1>{{ device.name }}</h1>
+      <button class="btn-primary" (click)="edit()">Edit</button>
+    </div>
+
+    <div class="grid">
+      <div class="field">
+        <span class="label">Manufacturer</span>
+        <span class="value">{{ device.manufacturer }}</span>
+      </div>
+      <div class="field">
+        <span class="label">Type</span>
+        <span class="value">{{ device.type }}</span>
+      </div>
+      <div class="field">
+        <span class="label">Operating System</span>
+        <span class="value">{{ device.os }} {{ device.osVersion }}</span>
+      </div>
+      <div class="field">
+        <span class="label">Processor</span>
+        <span class="value">{{ device.processor }}</span>
+      </div>
+      <div class="field">
+        <span class="label">RAM</span>
+        <span class="value">{{ device.ram }} GB</span>
+      </div>
+      <div class="field">
+        <span class="label">Assigned To</span>
+        <span [class]="device.assignedUserName ? 'badge assigned' : 'badge available'">
+          {{ device.assignedUserName ?? 'Available' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="field full" *ngIf="device.description">
+      <span class="label">Description</span>
+      <span class="value">{{ device.description }}</span>
+    </div>
+  </div>
+</div>

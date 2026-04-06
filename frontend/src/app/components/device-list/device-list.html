@@ -1,0 +1,40 @@
+<div class="container">
+  <div class="header">
+    <h1>Device Inventory</h1>
+    <button class="btn-primary" (click)="newDevice()">+ Add Device</button>
+  </div>
+
+  <div *ngIf="loading" class="state-msg">Loading devices...</div>
+  <div *ngIf="error" class="state-msg error">{{ error }}</div>
+
+  <table *ngIf="!loading && !error">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Manufacturer</th>
+        <th>Type</th>
+        <th>OS</th>
+        <th>RAM</th>
+        <th>Assigned To</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let device of devices" (click)="viewDevice(device.id)">
+        <td>{{ device.name }}</td>
+        <td>{{ device.manufacturer }}</td>
+        <td>{{ device.type }}</td>
+        <td>{{ device.os }} {{ device.osVersion }}</td>
+        <td>{{ device.ram }} GB</td>
+        <td>
+          <span [class]="device.assignedUserName ? 'badge assigned' : 'badge available'">
+            {{ device.assignedUserName ?? 'Available' }}
+          </span>
+        </td>
+        <td>
+          <button class="btn-danger" (click)="deleteDevice($event, device.id)">Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
