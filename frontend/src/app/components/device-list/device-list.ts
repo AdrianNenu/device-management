@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import { Device } from '../../models/device';
 import { DeviceService } from '../../services/device.service';
 import { DeviceStateService } from '../../services/device-state.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-device-list',
@@ -20,9 +21,14 @@ export class DeviceListComponent implements OnInit, OnDestroy {
 
   private deviceService = inject(DeviceService);
   private deviceState = inject(DeviceStateService);
+  private auth = inject(AuthService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
   private sub = new Subscription();
+
+  get userName(): string | null {
+    return this.auth.getUserName();
+  }
 
   ngOnInit(): void {
     this.loadDevices();
@@ -65,7 +71,14 @@ export class DeviceListComponent implements OnInit, OnDestroy {
     if (!confirm('Delete this device?')) return;
     this.deviceService.delete(id).subscribe({
       next: () => this.deviceState.triggerRefresh(),
-      error: () => { this.error = 'Failed to delete device.'; this.cdr.detectChanges(); }
+      error: () => {
+        this.error = 'Failed to delete device.';
+        this.cdr.detectChanges();
+      }
     });
+  }
+
+  logout(): void {
+    this.auth.logout();
   }
 }

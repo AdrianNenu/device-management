@@ -10,4 +10,6 @@ public interface IDeviceRepository
     Task<Device?> UpdateAsync(int id, Device device);
     Task<bool> DeleteAsync(int id);
     Task<bool> ExistsAsync(string name, int? excludeId = null);
+    Task<Device?> AssignAsync(int deviceId, int userId);
+    Task<Device?> UnassignAsync(int deviceId);
 }

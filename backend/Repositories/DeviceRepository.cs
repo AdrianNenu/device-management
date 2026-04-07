@@ -53,4 +53,22 @@ public class DeviceRepository : IDeviceRepository
 
     public async Task<bool> ExistsAsync(string name, int? excludeId = null) =>
         await _db.Devices.AnyAsync(d => d.Name == name && d.Id != excludeId);
+
+    public async Task<Device?> AssignAsync(int deviceId, int userId)
+{
+    var device = await _db.Devices.FindAsync(deviceId);
+    if (device is null) return null;
+    device.AssignedUserId = userId;
+    await _db.SaveChangesAsync();
+    return await GetByIdAsync(deviceId);
+}
+
+public async Task<Device?> UnassignAsync(int deviceId)
+{
+    var device = await _db.Devices.FindAsync(deviceId);
+    if (device is null) return null;
+    device.AssignedUserId = null;
+    await _db.SaveChangesAsync();
+    return await GetByIdAsync(deviceId);
+}
 }

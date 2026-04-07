@@ -9,6 +9,8 @@
   h1 { font-size: 1.5rem; font-weight: 600; margin: 0; }
 }
 
+.header-actions { display: flex; gap: 8px; }
+
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
 .field { display: flex; flex-direction: column; gap: 4px; }
@@ -23,6 +25,12 @@
 
 .btn-primary { background: #1976d2; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .btn-primary:hover { background: #1565c0; }
+.btn-success { background: #2e7d32; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.btn-success:hover { background: #1b5e20; }
+.btn-warning { background: #f57c00; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+.btn-warning:hover { background: #e65100; }
+
+.error-msg { background: #ffebee; color: #d32f2f; padding: 10px 14px; border-radius: 6px; margin-bottom: 1rem; font-size: 0.9rem; }
 
 .state-msg { text-align: center; padding: 2rem; color: #666; }
 .error { color: #d32f2f; }

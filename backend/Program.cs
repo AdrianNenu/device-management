@@ -2,6 +2,10 @@ using DeviceManagement.API.Data;
 using Microsoft.EntityFrameworkCore;
 using DeviceManagement.API.Interfaces;
 using DeviceManagement.API.Repositories;
+using System.Text;
+using DeviceManagement.API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +25,23 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -31,6 +52,7 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/test", () => "working");

@@ -2,6 +2,8 @@ using DeviceManagement.API.DTOs;
 using DeviceManagement.API.Interfaces;
 using DeviceManagement.API.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DeviceManagement.API.Controllers;
 
@@ -85,4 +87,33 @@ public class DevicesController : ControllerBase
         d.OS, d.OSVersion, d.Processor, d.RAM,
         d.Description, d.AssignedUserId, d.AssignedUser?.Name
     );
+    [HttpPost("{id}/assign")]
+[Authorize]
+public async Task<IActionResult> Assign(int id)
+{
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var device = await _repo.GetByIdAsync(id);
+
+    if (device is null) return NotFound();
+    if (device.AssignedUserId is not null)
+        return Conflict(new { message = "Device is already assigned to someone." });
+
+    var result = await _repo.AssignAsync(id, userId);
+    return result is null ? NotFound() : Ok(ToDto(result));
+}
+
+[HttpPost("{id}/unassign")]
+[Authorize]
+public async Task<IActionResult> Unassign(int id)
+{
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    var device = await _repo.GetByIdAsync(id);
+
+    if (device is null) return NotFound();
+    if (device.AssignedUserId != userId)
+        return Forbid();
+
+    var result = await _repo.UnassignAsync(id);
+    return result is null ? NotFound() : Ok(ToDto(result));
+}
 }

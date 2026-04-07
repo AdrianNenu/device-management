@@ -1,0 +1,23 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1>Sign in</h1>
+    <p class="subtitle">Device Management System</p>
+
+    <div *ngIf="error" class="error-msg">{{ error }}</div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" [(ngModel)]="email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" [(ngModel)]="password" placeholder="••••••••" />
+    </div>
+
+    <button class="btn-primary" (click)="submit()" [disabled]="submitting">
+      {{ submitting ? 'Signing in...' : 'Sign in' }}
+    </button>
+
+    <p class="switch">Don't have an account? <a routerLink="/register">Register</a></p>
+  </div>
+</div>
