@@ -42,4 +42,8 @@ export class DeviceService {
   unassign(id: number): Observable<Device> {
     return this.http.post<Device>(`${this.url}/${id}/unassign`, {}, { headers: this.authHeaders() });
   }
+
+  generateDescription(deviceSpecs: any): Observable<{description: string}> {
+    return this.http.post<{description: string}>(`${this.url}/generate-description`, deviceSpecs, { headers: this.authHeaders() });
+  }
 }

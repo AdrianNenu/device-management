@@ -105,4 +105,41 @@ export class DeviceFormComponent implements OnInit {
   back(): void {
     this.router.navigate(['/devices']);
   }
+
+  generatingDesc = false;
+
+  generateDescription(): void {
+    // Grab the current values directly from the class properties
+    const specs = {
+      name: this.name,
+      manufacturer: this.manufacturer,
+      type: this.type,
+      os: this.os,
+      osVersion: this.osVersion,
+      processor: this.processor,
+      ram: this.ram
+    };
+
+    if (!specs.name || !specs.manufacturer || !specs.os) {
+      alert('Please fill out the Name, Manufacturer, and OS fields first!');
+      return;
+    }
+
+    this.generatingDesc = true;
+    this.deviceService.generateDescription(specs).subscribe({
+      next: (res) => {
+        // Assign the result back to the flat description property
+        this.description = res.description;
+        this.generatingDesc = false;
+        this.cdr.detectChanges(); // Ensure the UI updates immediately
+      },
+      error: () => {
+        alert('Failed to generate description.');
+        this.generatingDesc = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+  
+
 }

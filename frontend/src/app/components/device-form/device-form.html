@@ -36,9 +36,14 @@
         <label>RAM (GB) *</label>
         <input type="number" [(ngModel)]="ram" placeholder="e.g. 8" />
       </div>
-      <div class="field full">
-        <label>Description</label>
-        <textarea [(ngModel)]="description" rows="3" placeholder="Optional description"></textarea>
+      <div class="field">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label>Description</label>
+          <button type="button" class="btn-sparkle" (click)="generateDescription()" [disabled]="generatingDesc">
+      ✨ {{ generatingDesc ? 'Generating...' : 'Auto-Generate' }}
+          </button>
+        </div>
+        <textarea [(ngModel)]="description" rows="4"></textarea>
       </div>
     </div>
 

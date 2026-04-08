@@ -4,6 +4,7 @@ using DeviceManagement.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using DeviceManagement.API.Services;
 
 namespace DeviceManagement.API.Controllers;
 
@@ -19,6 +20,14 @@ public class DevicesController : ControllerBase
     {
         var devices = await _repo.GetAllAsync();
         return Ok(devices.Select(d => ToDto(d)));
+    }
+
+    [HttpPost("generate-description")]
+    [Authorize]
+    public async Task<IActionResult> GenerateDescription([FromBody] GenerateDescriptionDto dto, [FromServices] AiService aiService)
+    {
+    var description = await aiService.GenerateDescriptionAsync(dto);
+    return Ok(new { description });
     }
 
     [HttpGet("{id}")]
