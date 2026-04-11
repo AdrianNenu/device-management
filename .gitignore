@@ -447,3 +447,4 @@ Thumbs.db
 
 # Local secrets
 backend/appsettings.local.json
+codebase.txt
