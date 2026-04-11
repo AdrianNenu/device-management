@@ -24,15 +24,15 @@ DELETE FROM Users WHERE Email IN (
 
 INSERT INTO Users (Name, Email, PasswordHash, Role, Location) VALUES
 -- Password: Admin1234!
-('System Admin',   'admin@company.com',   '$2a$11$xZ8J1Q2k3m4n5o6p7q8r9ueWvXyZaAbBcCdDeEfFgGhHiIjJkKlLmM', 'Admin',    'London'),
+('System Admin',   'admin@company.com',   '$2a$11$358FU8mwEfK85Lg4yIXDSe/Dbtj.egQuGOnQQmnDJ4qgCXIVTIWlS', 'Admin',    'London'),
 -- Password: Manager123!
-('Sarah Manager',  'manager@company.com', '$2a$11$aB1cD2eF3gH4iJ5kL6mN7uOPQRSTUVWXYZ012345678901234567890', 'Manager',  'New York'),
+('Sarah Manager',  'manager@company.com', '$2a$11$L5d4V21CKDZjpgPbwcUc/OwrgueELGuMABpEXyiUf287M9oYF4ppi', 'Manager',  'New York'),
 -- Password: Alice123!
-('Alice Johnson',  'alice@company.com',   '$2a$11$bC2dE3fG4hI5jK6lM7nO8uPQRSTUVWXYZ012345678901234567890', 'Employee', 'London'),
+('Alice Johnson',  'alice@company.com',   '$2a$11$BAQF4OVWL.GjqsoiVb8S2eWVsob257rTkkDVdpLuHQ29gOlvClaoW', 'Employee', 'London'),
 -- Password: Bob123!
-('Bob Smith',      'bob@company.com',     '$2a$11$cD3eF4gH5iJ6kL7mN8oP9uQRSTUVWXYZ012345678901234567890', 'Employee', 'Manchester'),
+('Bob Smith',      'bob@company.com',     '$2a$11$iVRmSqd7KtrY2P4BmcW0n.L70m7yS58qxjPSrArvwhxBr3nGxBsOC', 'Employee', 'Manchester'),
 -- Password: Priya123!
-('Priya Patel',    'priya@company.com',   '$2a$11$dE4fG5hI6jK7lM8nO9pQ0uRSTUVWXYZ012345678901234567890', 'Employee', 'Birmingham');
+('Priya Patel',    'priya@company.com',   '$2a$11$pOK1PdHpHxvVuwZULnuXKO7Q9EzCSzL/8GAUn0xT/zhSqGiay9it2', 'Employee', 'Birmingham');
 GO
 
 -- ── Devices ───────────────────────────────────────────────────
