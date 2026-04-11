@@ -72,6 +72,7 @@
     transition: border-color .15s;
     &:focus { border-color: var(--accent); background: var(--surface); }
     &::placeholder { color: var(--text-3); }
+    &.input-error { border-color: #E24B4A; }
   }
   select {
     appearance: none;
@@ -81,6 +82,8 @@
     cursor: pointer;
   }
 }
+
+.err-msg { font-size: 11px; color: #E24B4A; margin-top: -2px; }
 
 .btn-submit {
   width: 100%;

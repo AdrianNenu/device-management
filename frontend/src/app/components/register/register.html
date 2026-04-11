@@ -18,36 +18,49 @@
           <p>Fill in your details to get started</p>
         </div>
 
-        <div class="err-banner" *ngIf="error">{{ error }}</div>
+        <div class="err-banner" *ngIf="serverError">{{ serverError }}</div>
 
         <div class="field-row">
           <div class="field">
             <label>Full name</label>
-            <input [(ngModel)]="name" placeholder="Jane Smith">
+            <input [(ngModel)]="name"
+                   (blur)="validateName()"
+                   (ngModelChange)="onNameChange()"
+                   placeholder="Jane Smith"
+                   [class.input-error]="nameError">
+            <span class="err-msg" *ngIf="nameError">{{ nameError }}</span>
           </div>
           <div class="field">
             <label>Location</label>
-            <input [(ngModel)]="location" placeholder="e.g. London">
+            <input [(ngModel)]="location"
+                   (blur)="validateLocation()"
+                   (ngModelChange)="onLocationChange()"
+                   placeholder="e.g. London"
+                   [class.input-error]="locationError">
+            <span class="err-msg" *ngIf="locationError">{{ locationError }}</span>
           </div>
         </div>
 
         <div class="field">
           <label>Email address</label>
-          <input type="email" [(ngModel)]="email" placeholder="you@company.com">
+          <input type="email"
+                 [(ngModel)]="email"
+                 (blur)="validateEmail()"
+                 (ngModelChange)="onEmailChange()"
+                 placeholder="you@company.com"
+                 [class.input-error]="emailError">
+          <span class="err-msg" *ngIf="emailError">{{ emailError }}</span>
         </div>
 
         <div class="field">
           <label>Password</label>
-          <input type="password" [(ngModel)]="password" placeholder="••••••••">
-        </div>
-
-        <div class="field">
-          <label>Role</label>
-          <select [(ngModel)]="role">
-            <option value="Employee">Employee</option>
-            <option value="Manager">Manager</option>
-            <option value="Admin">Admin</option>
-          </select>
+          <input type="password"
+                 [(ngModel)]="password"
+                 (blur)="validatePassword()"
+                 (ngModelChange)="onPasswordChange()"
+                 placeholder="••••••••"
+                 [class.input-error]="passwordError">
+          <span class="err-msg" *ngIf="passwordError">{{ passwordError }}</span>
         </div>
 
         <button class="btn-submit" (click)="submit()" [disabled]="submitting">

@@ -21,6 +21,7 @@ export class DeviceFormComponent implements OnInit {
   submitting = false;
   loading = false;
   generatingDesc = false;
+  serverError = '';
 
   private fb            = inject(FormBuilder);
   private deviceService = inject(DeviceService);
@@ -30,8 +31,14 @@ export class DeviceFormComponent implements OnInit {
   private auth          = inject(AuthService);
   private cdr           = inject(ChangeDetectorRef);
 
+  // Returns true when a field is invalid AND has been touched OR the form was submitted.
+  // Drives both the red border and the error message — no clicking away required.
+  isInvalid(name: string): boolean {
+    const ctrl = this.deviceForm?.get(name);
+    return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
   ngOnInit(): void {
-    // if user lacks write permission, redirect away
     if (!this.auth.canWrite()) {
       this.router.navigate(['/devices']);
       return;
@@ -46,6 +53,18 @@ export class DeviceFormComponent implements OnInit {
       processor:   ['', Validators.required],
       ram:         ['', [Validators.required, Validators.min(1), Validators.max(128), Validators.pattern('^[0-9]+$')]],
       description: ['']
+    });
+
+    // Mark each field as touched as soon as the user changes it so errors
+    // appear the moment the value becomes invalid, not only on blur.
+    this.deviceForm.valueChanges.subscribe(() => {
+      Object.keys(this.deviceForm.controls).forEach(key => {
+        const ctrl = this.deviceForm.get(key);
+        if (ctrl && ctrl.dirty) ctrl.markAsTouched();
+      });
+      // Clear server error when the user starts correcting fields
+      if (this.serverError) this.serverError = '';
+      this.cdr.detectChanges();
     });
 
     const id = this.route.snapshot.paramMap.get('id');
@@ -68,8 +87,14 @@ export class DeviceFormComponent implements OnInit {
   }
 
   submit(): void {
-    if (this.deviceForm.invalid) { this.deviceForm.markAllAsTouched(); return; }
+    // Touch every field immediately so all errors appear at once
+    this.deviceForm.markAllAsTouched();
+    this.cdr.detectChanges();
+
+    if (this.deviceForm.invalid) return;
+
     this.submitting = true;
+    this.serverError = '';
 
     const raw = this.deviceForm.value as {
       name: string; manufacturer: string; type: string;
@@ -93,15 +118,16 @@ export class DeviceFormComponent implements OnInit {
         this.router.navigate(['/devices']);
       },
       error: (err: HttpErrorResponse) => {
-        let msg = 'An error occurred while saving.';
-        if (err.status === 400 && err.error?.errors) {
+        // Show the server error inline — no alert(), no click-away required
+        if (err.status === 409) {
+          this.serverError = err.error?.message ?? 'A device with this name already exists.';
+        } else if (err.status === 400 && err.error?.errors) {
           const key = Object.keys(err.error.errors as Record<string, unknown>)[0];
           const val = (err.error.errors as Record<string, string[]>)[key];
-          msg = Array.isArray(val) ? val[0] : String(val);
-        } else if (err.error?.message) {
-          msg = err.error.message as string;
+          this.serverError = Array.isArray(val) ? val[0] : String(val);
+        } else {
+          this.serverError = err.error?.message ?? 'An error occurred while saving.';
         }
-        alert(msg);
         this.submitting = false;
         this.cdr.detectChanges();
       }
@@ -112,6 +138,7 @@ export class DeviceFormComponent implements OnInit {
     const required = ['name', 'manufacturer', 'type', 'os', 'osVersion', 'processor', 'ram'];
     if (required.some(k => this.deviceForm.get(k)?.invalid)) {
       this.deviceForm.markAllAsTouched();
+      this.cdr.detectChanges();
       return;
     }
     this.generatingDesc = true;
@@ -122,7 +149,9 @@ export class DeviceFormComponent implements OnInit {
         this.generatingDesc = false;
         this.cdr.detectChanges();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
+        // Show the exact message from the API (Gemini error, network error, etc.)
+        this.serverError = err.error?.message ?? `AI generation failed (${err.status})`;
         this.generatingDesc = false;
         this.cdr.detectChanges();
       }
