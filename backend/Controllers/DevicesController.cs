@@ -16,8 +16,6 @@ public class DevicesController : ControllerBase
 
     public DevicesController(IDeviceRepository repo) => _repo = repo;
 
-    // ── Read — any authenticated user ────────────────────────────────────
-
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAll()
@@ -53,8 +51,20 @@ public class DevicesController : ControllerBase
         [FromBody] GenerateDescriptionDto dto,
         [FromServices] AiService aiService)
     {
-        var description = await aiService.GenerateDescriptionAsync(dto);
-        return Ok(new { description });
+        try
+        {
+            var description = await aiService.GenerateDescriptionAsync(dto);
+            return Ok(new { description });
+        }
+        catch (HttpRequestException ex)
+        {
+            // Return the Gemini error message directly — it's safe and descriptive
+            return StatusCode(502, new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 
     [HttpPost]
@@ -136,12 +146,10 @@ public class DevicesController : ControllerBase
         if (string.IsNullOrEmpty(userIdString) || !int.TryParse(userIdString, out var userId))
             return Unauthorized(new { message = "Invalid user token." });
 
-        var role = User.FindFirstValue(ClaimTypes.Role);
-
+        var role   = User.FindFirstValue(ClaimTypes.Role);
         var device = await _repo.GetByIdAsync(id);
         if (device is null) return NotFound();
 
-        
         if (role == "Employee" && device.AssignedUserId != userId)
             return Forbid();
 

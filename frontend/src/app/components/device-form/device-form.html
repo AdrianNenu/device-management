@@ -29,6 +29,9 @@
         </svg>
       </button>
       <span class="topbar-title">{{ isEdit ? 'Edit device' : 'Add device' }}</span>
+
+      <!-- Server error shown inline in the topbar so it's always visible -->
+      <div class="topbar-error" *ngIf="serverError">{{ serverError }}</div>
     </div>
 
     <div class="form-content" *ngIf="!loading">
@@ -36,7 +39,6 @@
 
         <div class="form-layout">
 
-          <!-- Left column: core fields -->
           <div class="form-card">
             <div class="card-header">
               <div class="card-title">Device details</div>
@@ -48,14 +50,14 @@
                 <div class="field">
                   <label class="field-label">Name</label>
                   <input class="field-input" formControlName="name" placeholder="e.g. iPhone 15 Pro"
-                         [class.input-error]="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched">
-                  <span class="err-msg" *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched">Required</span>
+                         [class.input-error]="isInvalid('name')">
+                  <span class="err-msg" *ngIf="isInvalid('name')">Required</span>
                 </div>
                 <div class="field">
                   <label class="field-label">Manufacturer</label>
                   <input class="field-input" formControlName="manufacturer" placeholder="e.g. Apple"
-                         [class.input-error]="deviceForm.get('manufacturer')?.invalid && deviceForm.get('manufacturer')?.touched">
-                  <span class="err-msg" *ngIf="deviceForm.get('manufacturer')?.invalid && deviceForm.get('manufacturer')?.touched">Required</span>
+                         [class.input-error]="isInvalid('manufacturer')">
+                  <span class="err-msg" *ngIf="isInvalid('manufacturer')">Required</span>
                 </div>
               </div>
 
@@ -63,19 +65,20 @@
                 <div class="field">
                   <label class="field-label">Type</label>
                   <select class="field-input field-select" formControlName="type"
-                          [class.input-error]="deviceForm.get('type')?.invalid && deviceForm.get('type')?.touched">
+                          [class.input-error]="isInvalid('type')">
                     <option value="" disabled>Select type</option>
                     <option value="Phone">Phone</option>
                     <option value="Tablet">Tablet</option>
                   </select>
-                  <span class="err-msg" *ngIf="deviceForm.get('type')?.invalid && deviceForm.get('type')?.touched">Required</span>
+                  <span class="err-msg" *ngIf="isInvalid('type')">Required</span>
                 </div>
                 <div class="field">
                   <label class="field-label">RAM (GB)</label>
                   <input class="field-input" formControlName="ram" type="number" placeholder="e.g. 8"
-                         [class.input-error]="deviceForm.get('ram')?.invalid && deviceForm.get('ram')?.touched">
+                         [class.input-error]="isInvalid('ram')">
                   <span class="err-msg" *ngIf="deviceForm.get('ram')?.hasError('required') && deviceForm.get('ram')?.touched">Required</span>
                   <span class="err-msg" *ngIf="(deviceForm.get('ram')?.hasError('min') || deviceForm.get('ram')?.hasError('max')) && deviceForm.get('ram')?.touched">Must be 1–128 GB</span>
+                  <span class="err-msg" *ngIf="deviceForm.get('ram')?.hasError('pattern') && deviceForm.get('ram')?.touched">Whole numbers only</span>
                 </div>
               </div>
 
@@ -83,33 +86,31 @@
                 <div class="field">
                   <label class="field-label">Operating system</label>
                   <input class="field-input" formControlName="os" placeholder="e.g. iOS"
-                         [class.input-error]="deviceForm.get('os')?.invalid && deviceForm.get('os')?.touched">
-                  <span class="err-msg" *ngIf="deviceForm.get('os')?.invalid && deviceForm.get('os')?.touched">Required</span>
+                         [class.input-error]="isInvalid('os')">
+                  <span class="err-msg" *ngIf="isInvalid('os')">Required</span>
                 </div>
                 <div class="field">
                   <label class="field-label">OS version</label>
                   <input class="field-input" formControlName="osVersion" placeholder="e.g. 17.4"
-                         [class.input-error]="deviceForm.get('osVersion')?.invalid && deviceForm.get('osVersion')?.touched">
-                  <span class="err-msg" *ngIf="deviceForm.get('osVersion')?.invalid && deviceForm.get('osVersion')?.touched">Required</span>
+                         [class.input-error]="isInvalid('osVersion')">
+                  <span class="err-msg" *ngIf="isInvalid('osVersion')">Required</span>
                 </div>
               </div>
 
               <div class="field">
                 <label class="field-label">Processor</label>
                 <input class="field-input" formControlName="processor" placeholder="e.g. A17 Pro"
-                       [class.input-error]="deviceForm.get('processor')?.invalid && deviceForm.get('processor')?.touched">
-                <span class="err-msg" *ngIf="deviceForm.get('processor')?.invalid && deviceForm.get('processor')?.touched">Required</span>
+                       [class.input-error]="isInvalid('processor')">
+                <span class="err-msg" *ngIf="isInvalid('processor')">Required</span>
               </div>
             </div>
           </div>
 
-          <!-- Right column: description -->
           <div class="form-card">
             <div class="card-header">
               <div class="card-title">Description</div>
               <div class="card-sub">Optional summary of the device</div>
             </div>
-
             <div class="fields">
               <div class="desc-actions">
                 <button type="button" class="btn btn-ai"
@@ -130,7 +131,6 @@
 
         </div>
 
-        <!-- Form actions -->
         <div class="form-actions">
           <button type="button" class="btn" (click)="back()">Cancel</button>
           <button type="submit" class="btn btn-primary" [disabled]="submitting">

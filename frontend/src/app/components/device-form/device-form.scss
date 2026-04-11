@@ -90,6 +90,20 @@
 }
 .topbar-title { font-size: 15px; font-weight: 500; color: var(--text); }
 
+/* Inline server error in topbar */
+.topbar-error {
+  margin-left: auto;
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  max-width: 400px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .form-content {
   flex: 1;
   overflow-y: auto;
@@ -134,11 +148,8 @@
   flex-direction: column;
   gap: 5px;
 }
-.field-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-2);
-}
+.field-label { font-size: 12px; font-weight: 500; color: var(--text-2); }
+
 .field-input {
   height: 36px;
   padding: 0 10px;
@@ -150,10 +161,7 @@
   font-family: inherit;
   outline: none;
   transition: border-color .15s, background .15s;
-  &:focus {
-    border-color: var(--accent);
-    background: var(--surface);
-  }
+  &:focus { border-color: var(--accent); background: var(--surface); }
   &::placeholder { color: var(--text-3); }
   &.input-error { border-color: #E24B4A; }
 }
@@ -173,10 +181,7 @@
 }
 .err-msg { font-size: 11px; color: #E24B4A; }
 
-.desc-actions {
-  display: flex;
-  justify-content: flex-end;
-}
+.desc-actions { display: flex; justify-content: flex-end; }
 
 .btn {
   display: inline-flex;
@@ -209,7 +214,7 @@
   background: var(--accent-soft);
   font-size: 12px;
   height: 30px;
-  &:hover { background: var(--accent-soft); opacity: .85; }
+  &:hover { opacity: .85; }
 }
 
 .form-actions {
