@@ -2,6 +2,7 @@ export interface AuthResponse {
   token: string;
   name: string;
   userId: number;
+  role: string;
 }
 
 export interface RegisterRequest {

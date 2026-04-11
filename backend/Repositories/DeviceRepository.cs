@@ -52,23 +52,65 @@ public class DeviceRepository : IDeviceRepository
     }
 
     public async Task<bool> ExistsAsync(string name, int? excludeId = null) =>
-        await _db.Devices.AnyAsync(d => d.Name == name && d.Id != excludeId);
+        await _db.Devices.AnyAsync(d =>
+            d.Name == name && (excludeId == null || d.Id != excludeId.Value));
 
     public async Task<Device?> AssignAsync(int deviceId, int userId)
-{
-    var device = await _db.Devices.FindAsync(deviceId);
-    if (device is null) return null;
-    device.AssignedUserId = userId;
-    await _db.SaveChangesAsync();
-    return await GetByIdAsync(deviceId);
-}
+    {
+        var device = await _db.Devices.FindAsync(deviceId);
+        if (device is null) return null;
 
-public async Task<Device?> UnassignAsync(int deviceId)
-{
-    var device = await _db.Devices.FindAsync(deviceId);
-    if (device is null) return null;
-    device.AssignedUserId = null;
-    await _db.SaveChangesAsync();
-    return await GetByIdAsync(deviceId);
-}
+        device.AssignedUserId = userId;
+
+        await _db.SaveChangesAsync();
+        await _db.Entry(device).Reference(d => d.AssignedUser).LoadAsync();
+
+        return device;
+    }
+
+    public async Task<Device?> UnassignAsync(int deviceId)
+    {
+        var device = await _db.Devices.FindAsync(deviceId);
+        if (device is null) return null;
+
+        device.AssignedUserId = null;
+        device.AssignedUser   = null;
+
+        await _db.SaveChangesAsync();
+        return device;
+    }
+
+    public async Task<IEnumerable<Device>> SearchAsync(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query)) return Enumerable.Empty<Device>();
+
+        var normalizedQuery = new string(query.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray());
+        var tokens = normalizedQuery.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        var devices = await GetAllAsync();
+
+        return devices
+            .Select(d =>
+            {
+                int score = 0;
+                string name  = d.Name.ToLower();
+                string mfg   = d.Manufacturer.ToLower();
+                string proc  = d.Processor.ToLower();
+                string ram   = d.RAM.ToString();
+
+                foreach (var token in tokens)
+                {
+                    if (name.Contains(token)) score += 10;
+                    if (mfg.Contains(token))  score += 5;
+                    if (proc.Contains(token)) score += 3;
+                    if (ram == token)         score += 1;
+                }
+
+                return new { Device = d, Score = score };
+            })
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .ThenBy(x => x.Device.Name)
+            .Select(x => x.Device);
+    }
 }

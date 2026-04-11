@@ -1,1 +1,53 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f4f4f1;
+  color: #1a1a1a;
+}
+
+* { box-sizing: border-box; }
+
+:root {
+  --accent: #178CF2;
+  --accent-soft: #E6F1FB;
+  --accent-text: #0C447C;
+  --success-soft: #EAF3DE;
+  --success-text: #3B6D11;
+  --warn-soft: #FAEEDA;
+  --warn-text: #854F0B;
+  --danger-soft: #FCEBEB;
+  --danger-text: #A32D2D;
+  --border: rgba(0,0,0,0.1);
+  --radius: 8px;
+  --radius-lg: 12px;
+  --surface: #ffffff;
+  --surface-2: #f4f4f1;
+  --text: #1a1a1a;
+  --text-2: #6b6b6b;
+  --text-3: #a0a0a0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #378ADD;
+    --accent-soft: #0c2a40;
+    --accent-text: #85B7EB;
+    --success-soft: #17300a;
+    --success-text: #97C459;
+    --warn-soft: #2e1f04;
+    --warn-text: #EF9F27;
+    --danger-soft: #2e0d0d;
+    --danger-text: #F09595;
+    --border: rgba(255,255,255,0.1);
+    --surface: #1e1e1e;
+    --surface-2: #151515;
+    --text: #f0f0f0;
+    --text-2: #a0a0a0;
+    --text-3: #606060;
+  }
+
+  body { background: var(--surface-2); color: var(--text); }
+}

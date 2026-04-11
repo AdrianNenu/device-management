@@ -1,23 +1,57 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h1>Sign in</h1>
-    <p class="subtitle">Device Management System</p>
+<div class="auth-bg">
+  <div class="auth-split">
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
+    <div class="auth-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 16 16" fill="white" width="20" height="20">
+          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
+        </svg>
+      </div>
+      <div class="brand-name">DeviceHub</div>
+      <p class="brand-desc">Manage your company's devices, track assignments, and keep your inventory up to date.</p>
 
-    <div class="field">
-      <label>Email</label>
-      <input type="email" [(ngModel)]="email" placeholder="you@example.com" />
+      <div class="brand-stats">
+        <div class="brand-stat">
+          <div class="brand-stat-value">100%</div>
+          <div class="brand-stat-label">Inventory visibility</div>
+        </div>
+        <div class="brand-stat">
+          <div class="brand-stat-value">Real-time</div>
+          <div class="brand-stat-label">Assignment tracking</div>
+        </div>
+        <div class="brand-stat">
+          <div class="brand-stat-value">AI</div>
+          <div class="brand-stat-label">Description generation</div>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" [(ngModel)]="password" placeholder="••••••••" />
+
+    <div class="auth-form-wrap">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>Sign in</h1>
+          <p>Welcome back — enter your credentials to continue</p>
+        </div>
+
+        <div class="err-banner" *ngIf="error">{{ error }}</div>
+
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" [(ngModel)]="email" placeholder="you@company.com" [class.input-error]="!!error">
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="password" placeholder="••••••••" [class.input-error]="!!error">
+        </div>
+
+        <button class="btn-submit" (click)="submit()" [disabled]="submitting">
+          {{ submitting ? 'Signing in…' : 'Sign in' }}
+        </button>
+
+        <p class="switch">Don't have an account? <a routerLink="/register">Create one</a></p>
+      </div>
     </div>
 
-    <button class="btn-primary" (click)="submit()" [disabled]="submitting">
-      {{ submitting ? 'Signing in...' : 'Sign in' }}
-    </button>
-
-    <p class="switch">Don't have an account? <a routerLink="/register">Register</a></p>
   </div>
 </div>

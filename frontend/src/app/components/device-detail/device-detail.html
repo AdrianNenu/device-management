@@ -1,53 +1,74 @@
 <div class="container">
-  <button class="btn-back" (click)="back()">← Back to list</button>
+  <button mat-button color="primary" class="btn-back" (click)="back()">
+    <mat-icon>arrow_back</mat-icon> Back to list
+  </button>
 
-  <div *ngIf="loading" class="state-msg">Loading...</div>
-  <div *ngIf="error" class="state-msg error">{{ error }}</div>
-
-  <div *ngIf="device" class="card">
-    <div class="card-header">
-      <h1>{{ device.name }}</h1>
-      <div class="header-actions">
-        <button *ngIf="isAvailable" class="btn-success" (click)="assign()">Assign to me</button>
-        <button *ngIf="isAssignedToMe" class="btn-warning" (click)="unassign()">Unassign</button>
-        <button class="btn-primary" (click)="edit()">Edit</button>
-      </div>
-    </div>
-
-    <div *ngIf="actionError" class="error-msg">{{ actionError }}</div>
-
-    <div class="grid">
-      <div class="field">
-        <span class="label">Manufacturer</span>
-        <span class="value">{{ device.manufacturer }}</span>
-      </div>
-      <div class="field">
-        <span class="label">Type</span>
-        <span class="value">{{ device.type }}</span>
-      </div>
-      <div class="field">
-        <span class="label">Operating System</span>
-        <span class="value">{{ device.os }} {{ device.osVersion }}</span>
-      </div>
-      <div class="field">
-        <span class="label">Processor</span>
-        <span class="value">{{ device.processor }}</span>
-      </div>
-      <div class="field">
-        <span class="label">RAM</span>
-        <span class="value">{{ device.ram }} GB</span>
-      </div>
-      <div class="field">
-        <span class="label">Assigned To</span>
-        <span [class]="device.assignedUserName ? 'badge assigned' : 'badge available'">
-          {{ device.assignedUserName ?? 'Available' }}
-        </span>
-      </div>
-    </div>
-
-    <div class="field full" *ngIf="device.description">
-      <span class="label">Description</span>
-      <span class="value">{{ device.description }}</span>
-    </div>
+  <div class="spinner-container" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
   </div>
+
+  <mat-card *ngIf="device" class="detail-card mat-elevation-z4">
+    <mat-card-header class="header">
+      <mat-card-title class="title">{{ device.name }}</mat-card-title>
+      <mat-card-subtitle>{{ device.manufacturer }}</mat-card-subtitle>
+
+      <div class="header-actions">
+        <button mat-flat-button color="accent"
+                *ngIf="isAvailable"
+                [disabled]="actionLoading"
+                (click)="assign()">
+          <mat-icon>person_add</mat-icon> Assign to me
+        </button>
+        <button mat-stroked-button color="warn"
+                *ngIf="isAssignedToMe"
+                [disabled]="actionLoading"
+                (click)="unassign()">
+          <mat-icon>person_remove</mat-icon> Unassign
+        </button>
+        <button mat-icon-button color="primary"
+                [disabled]="actionLoading"
+                (click)="edit()"
+                matTooltip="Edit Device">
+          <mat-icon>edit</mat-icon>
+        </button>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="grid">
+        <div class="field">
+          <span class="label">Type</span>
+          <span class="value">{{ device.type }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Operating System</span>
+          <span class="value">{{ device.os }} {{ device.osVersion }}</span>
+        </div>
+        <div class="field">
+          <span class="label">Processor</span>
+          <span class="value">{{ device.processor }}</span>
+        </div>
+        <div class="field">
+          <span class="label">RAM</span>
+          <span class="value">{{ device.ram }} GB</span>
+        </div>
+        <div class="field">
+          <span class="label">Assigned To</span>
+          <mat-chip-set>
+            <mat-chip [color]="device.assignedUserName ? 'primary' : 'accent'" highlighted>
+              {{ device.assignedUserName ?? 'Available' }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+
+      <ng-container *ngIf="device.description">
+        <mat-divider class="divider"></mat-divider>
+        <div class="field full">
+          <span class="label">Description</span>
+          <span class="value desc-text">{{ device.description }}</span>
+        </div>
+      </ng-container>
+    </mat-card-content>
+  </mat-card>
 </div>

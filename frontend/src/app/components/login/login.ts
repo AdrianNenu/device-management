@@ -17,18 +17,13 @@ export class LoginComponent {
   error = '';
   submitting = false;
 
-  private auth = inject(AuthService);
+  private auth   = inject(AuthService);
   private router = inject(Router);
 
   submit(): void {
-    if (!this.email || !this.password) {
-      this.error = 'Email and password are required.';
-      return;
-    }
-
+    if (!this.email || !this.password) { this.error = 'Email and password are required.'; return; }
     this.submitting = true;
     this.error = '';
-
     this.auth.login({ email: this.email, password: this.password }).subscribe({
       next: () => this.router.navigate(['/devices']),
       error: (err) => {

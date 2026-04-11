@@ -34,7 +34,7 @@ public class AuthService
         };
 
         var created = await _users.CreateAsync(user);
-        return new AuthResponseDto(GenerateToken(created), created.Name, created.Id);
+        return new AuthResponseDto(GenerateToken(created), created.Name, created.Id, created.Role);
     }
 
     public async Task<AuthResponseDto?> LoginAsync(LoginDto dto)
@@ -43,7 +43,7 @@ public class AuthService
         if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
             return null;
 
-        return new AuthResponseDto(GenerateToken(user), user.Name, user.Id);
+        return new AuthResponseDto(GenerateToken(user), user.Name, user.Id, user.Role);
     }
 
     private string GenerateToken(User user)
@@ -54,15 +54,16 @@ public class AuthService
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.Name)
+            new Claim(ClaimTypes.Email,          user.Email),
+            new Claim(ClaimTypes.Name,           user.Name),
+            new Claim(ClaimTypes.Role,           user.Role)
         };
 
         var token = new JwtSecurityToken(
-            issuer:   _config["Jwt:Issuer"],
-            audience: _config["Jwt:Audience"],
-            claims:   claims,
-            expires:  DateTime.UtcNow.AddDays(7),
+            issuer:             _config["Jwt:Issuer"],
+            audience:           _config["Jwt:Audience"],
+            claims:             claims,
+            expires:            DateTime.UtcNow.AddDays(7),
             signingCredentials: creds
         );
 

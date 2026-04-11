@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class DeviceStateService {
-  private refreshSource = new Subject<void>();
+  private refreshSource = new BehaviorSubject<number>(Date.now());
   refresh$ = this.refreshSource.asObservable();
 
   triggerRefresh(): void {
-    this.refreshSource.next();
+    this.refreshSource.next(Date.now());
   }
 }

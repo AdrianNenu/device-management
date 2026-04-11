@@ -6,6 +6,7 @@ using System.Text;
 using DeviceManagement.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,11 +26,12 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
+
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddHttpClient();
-builder.Services.AddScoped<AiService>();
+
+builder.Services.AddHttpClient<AiService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -43,10 +45,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer              = builder.Configuration["Jwt:Issuer"],
             ValidAudience            = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing.")))
         };
     });
+
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        var error = context.Features.Get<IExceptionHandlerFeature>();
+        if (error != null)
+        {
+            await context.Response.WriteAsJsonAsync(new { message = "An internal server error occurred.", details = error.Error.Message });
+        }
+    });
+});
 
 if (app.Environment.IsDevelopment())
 {
@@ -54,7 +71,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();

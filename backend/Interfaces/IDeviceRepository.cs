@@ -12,4 +12,5 @@ public interface IDeviceRepository
     Task<bool> ExistsAsync(string name, int? excludeId = null);
     Task<Device?> AssignAsync(int deviceId, int userId);
     Task<Device?> UnassignAsync(int deviceId);
+    Task<IEnumerable<Device>> SearchAsync(string query);
 }

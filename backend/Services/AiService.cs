@@ -17,31 +17,36 @@ public class AiService
 
     public async Task<string> GenerateDescriptionAsync(GenerateDescriptionDto dto)
     {
-        // 1. Build the prompt based on the task instructions
-        var prompt = $"Generate a human-readable, concise, and informative description for a device with the following specs. Only output one short sentence, no need to name all the specs. Do not use bolding or bullet points.\n" +
-                     $"Name: {dto.Name}\n" +
+        var systemInstruction = "You are an IT asset management assistant. " +
+            "Create a single, concise, professional sentence describing the device based on the provided specs. " +
+            "Do not list the specs directly. Do not use markdown, bolding, or bullet points.";
+
+        var prompt = $"Name: {dto.Name}\n" +
                      $"Manufacturer: {dto.Manufacturer}\n" +
                      $"Type: {dto.Type}\n" +
                      $"OS: {dto.OS} {dto.OSVersion}\n" +
                      $"Processor: {dto.Processor}\n" +
                      $"RAM: {dto.RAM}GB";
 
-        // 2. Format the payload for the Gemini API
-        var requestBody = new { contents = new[] { new { parts = new[] { new { text = prompt } } } } };
-        var json = JsonSerializer.Serialize(requestBody);
+        var requestBody = new
+        {
+            system_instruction = new { parts = new[] { new { text = systemInstruction } } },
+            contents = new[] { new { parts = new[] { new { text = prompt } } } }
+        };
+
+        var json    = JsonSerializer.Serialize(requestBody);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        // 3. Make the API call to Gemini 1.5 Flash
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
+        var url      = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
         var response = await _http.PostAsync(url, content);
 
         if (!response.IsSuccessStatusCode)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
-            return $"API Error: {response.StatusCode} - {errorBody}";
+            throw new HttpRequestException(
+                $"Gemini API returned {(int)response.StatusCode}: {errorBody}");
         }
 
-        // 4. Parse the response
         var responseJson = await response.Content.ReadAsStringAsync();
         using var document = JsonDocument.Parse(responseJson);
 
@@ -56,9 +61,9 @@ public class AiService
 
             return text?.Trim() ?? string.Empty;
         }
-        catch
+        catch (Exception ex)
         {
-            return "Could not parse AI response.";
+            throw new InvalidOperationException("Could not parse Gemini API response.", ex);
         }
     }
 }

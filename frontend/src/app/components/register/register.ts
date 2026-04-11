@@ -12,33 +12,19 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './register.scss'
 })
 export class RegisterComponent {
-  name = '';
-  email = '';
-  password = '';
-  role = 'Employee';
-  location = '';
-  error = '';
-  submitting = false;
+  name = ''; email = ''; password = ''; role = 'Employee'; location = '';
+  error = ''; submitting = false;
 
-  private auth = inject(AuthService);
+  private auth   = inject(AuthService);
   private router = inject(Router);
 
   submit(): void {
     if (!this.name || !this.email || !this.password || !this.location) {
-      this.error = 'All fields are required.';
-      return;
+      this.error = 'All fields are required.'; return;
     }
-
     this.submitting = true;
     this.error = '';
-
-    this.auth.register({
-      name: this.name,
-      email: this.email,
-      password: this.password,
-      role: this.role,
-      location: this.location
-    }).subscribe({
+    this.auth.register({ name: this.name, email: this.email, password: this.password, role: this.role, location: this.location }).subscribe({
       next: () => this.router.navigate(['/devices']),
       error: (err) => {
         this.error = err.error?.message ?? 'Registration failed.';

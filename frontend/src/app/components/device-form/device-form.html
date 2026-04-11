@@ -1,57 +1,148 @@
-<div class="container">
-  <button class="btn-back" (click)="back()">← Back to list</button>
+<div class="page-shell">
 
-  <div class="card">
-    <h1>{{ isEdit ? 'Edit Device' : 'Add New Device' }}</h1>
-
-    <div *ngIf="loading" class="state-msg">Loading...</div>
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
-
-    <div *ngIf="!loading" class="form-grid">
-      <div class="field">
-        <label>Name *</label>
-        <input [(ngModel)]="name" placeholder="e.g. iPhone 15 Pro" />
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="white" width="15" height="15">
+          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
+        </svg>
       </div>
-      <div class="field">
-        <label>Manufacturer *</label>
-        <input [(ngModel)]="manufacturer" placeholder="e.g. Apple" />
-      </div>
-      <div class="field">
-        <label>Type *</label>
-        <input [(ngModel)]="type" placeholder="e.g. Phone, Tablet" />
-      </div>
-      <div class="field">
-        <label>Operating System *</label>
-        <input [(ngModel)]="os" placeholder="e.g. iOS" />
-      </div>
-      <div class="field">
-        <label>OS Version *</label>
-        <input [(ngModel)]="osVersion" placeholder="e.g. 17.4" />
-      </div>
-      <div class="field">
-        <label>Processor *</label>
-        <input [(ngModel)]="processor" placeholder="e.g. A17 Pro" />
-      </div>
-      <div class="field">
-        <label>RAM (GB) *</label>
-        <input type="number" [(ngModel)]="ram" placeholder="e.g. 8" />
-      </div>
-      <div class="field">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <label>Description</label>
-          <button type="button" class="btn-sparkle" (click)="generateDescription()" [disabled]="generatingDesc">
-      ✨ {{ generatingDesc ? 'Generating...' : 'Auto-Generate' }}
-          </button>
-        </div>
-        <textarea [(ngModel)]="description" rows="4"></textarea>
+      <div>
+        <div class="logo-text">DeviceHub</div>
+        <div class="logo-sub">Management Console</div>
       </div>
     </div>
+    <nav class="nav">
+      <div class="nav-section">Inventory</div>
+      <div class="nav-item" (click)="back()">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
+        All devices
+      </div>
+    </nav>
+  </aside>
 
-    <div *ngIf="!loading" class="actions">
-      <button class="btn-secondary" (click)="back()">Cancel</button>
-      <button class="btn-primary" (click)="submit()" [disabled]="submitting">
-        {{ submitting ? 'Saving...' : (isEdit ? 'Save Changes' : 'Add Device') }}
+  <div class="main">
+    <div class="topbar">
+      <button class="back-btn" (click)="back()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+          <path d="M10 3L5 8l5 5"/>
+        </svg>
       </button>
+      <span class="topbar-title">{{ isEdit ? 'Edit device' : 'Add device' }}</span>
+    </div>
+
+    <div class="form-content" *ngIf="!loading">
+      <form [formGroup]="deviceForm" (ngSubmit)="submit()">
+
+        <div class="form-layout">
+
+          <!-- Left column: core fields -->
+          <div class="form-card">
+            <div class="card-header">
+              <div class="card-title">Device details</div>
+              <div class="card-sub">Basic information about the device</div>
+            </div>
+
+            <div class="fields">
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">Name</label>
+                  <input class="field-input" formControlName="name" placeholder="e.g. iPhone 15 Pro"
+                         [class.input-error]="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched">
+                  <span class="err-msg" *ngIf="deviceForm.get('name')?.invalid && deviceForm.get('name')?.touched">Required</span>
+                </div>
+                <div class="field">
+                  <label class="field-label">Manufacturer</label>
+                  <input class="field-input" formControlName="manufacturer" placeholder="e.g. Apple"
+                         [class.input-error]="deviceForm.get('manufacturer')?.invalid && deviceForm.get('manufacturer')?.touched">
+                  <span class="err-msg" *ngIf="deviceForm.get('manufacturer')?.invalid && deviceForm.get('manufacturer')?.touched">Required</span>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">Type</label>
+                  <select class="field-input field-select" formControlName="type"
+                          [class.input-error]="deviceForm.get('type')?.invalid && deviceForm.get('type')?.touched">
+                    <option value="" disabled>Select type</option>
+                    <option value="Phone">Phone</option>
+                    <option value="Tablet">Tablet</option>
+                  </select>
+                  <span class="err-msg" *ngIf="deviceForm.get('type')?.invalid && deviceForm.get('type')?.touched">Required</span>
+                </div>
+                <div class="field">
+                  <label class="field-label">RAM (GB)</label>
+                  <input class="field-input" formControlName="ram" type="number" placeholder="e.g. 8"
+                         [class.input-error]="deviceForm.get('ram')?.invalid && deviceForm.get('ram')?.touched">
+                  <span class="err-msg" *ngIf="deviceForm.get('ram')?.hasError('required') && deviceForm.get('ram')?.touched">Required</span>
+                  <span class="err-msg" *ngIf="(deviceForm.get('ram')?.hasError('min') || deviceForm.get('ram')?.hasError('max')) && deviceForm.get('ram')?.touched">Must be 1–128 GB</span>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field">
+                  <label class="field-label">Operating system</label>
+                  <input class="field-input" formControlName="os" placeholder="e.g. iOS"
+                         [class.input-error]="deviceForm.get('os')?.invalid && deviceForm.get('os')?.touched">
+                  <span class="err-msg" *ngIf="deviceForm.get('os')?.invalid && deviceForm.get('os')?.touched">Required</span>
+                </div>
+                <div class="field">
+                  <label class="field-label">OS version</label>
+                  <input class="field-input" formControlName="osVersion" placeholder="e.g. 17.4"
+                         [class.input-error]="deviceForm.get('osVersion')?.invalid && deviceForm.get('osVersion')?.touched">
+                  <span class="err-msg" *ngIf="deviceForm.get('osVersion')?.invalid && deviceForm.get('osVersion')?.touched">Required</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <label class="field-label">Processor</label>
+                <input class="field-input" formControlName="processor" placeholder="e.g. A17 Pro"
+                       [class.input-error]="deviceForm.get('processor')?.invalid && deviceForm.get('processor')?.touched">
+                <span class="err-msg" *ngIf="deviceForm.get('processor')?.invalid && deviceForm.get('processor')?.touched">Required</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right column: description -->
+          <div class="form-card">
+            <div class="card-header">
+              <div class="card-title">Description</div>
+              <div class="card-sub">Optional summary of the device</div>
+            </div>
+
+            <div class="fields">
+              <div class="desc-actions">
+                <button type="button" class="btn btn-ai"
+                        (click)="generateDescription()"
+                        [disabled]="generatingDesc">
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13">
+                    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.36 11.36l1.42 1.42M3.22 12.78l1.41-1.41M11.36 4.64l1.42-1.42"/>
+                  </svg>
+                  {{ generatingDesc ? 'Generating…' : 'Auto-generate with AI' }}
+                </button>
+              </div>
+              <div class="field">
+                <textarea class="field-input field-textarea" formControlName="description"
+                          rows="8" placeholder="A concise description of the device…"></textarea>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Form actions -->
+        <div class="form-actions">
+          <button type="button" class="btn" (click)="back()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="submitting">
+            {{ submitting ? 'Saving…' : (isEdit ? 'Save changes' : 'Add device') }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <div class="loading-full" *ngIf="loading">
+      <div class="spinner"></div>
     </div>
   </div>
 </div>

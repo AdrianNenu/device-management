@@ -1,44 +1,263 @@
-<div class="container">
-  <div class="header">
-    <h1>Device Inventory</h1>
-    <div class="header-actions">
-      <span class="user-greeting">Hello, {{ userName }}</span>
-      <button class="btn-primary" (click)="newDevice()">+ Add Device</button>
-      <button class="btn-logout" (click)="logout()">Logout</button>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="white" width="15" height="15">
+          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">DeviceHub</div>
+        <div class="logo-sub">Management Console</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Inventory</div>
+      <div class="nav-item" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
+        All devices
+        <span class="nav-badge">{{ devices.length }}</span>
+      </div>
+      <div class="nav-item" [class.active]="activeFilter === 'assigned'" (click)="setFilter('assigned')">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 1a4 4 0 100 8A4 4 0 008 1zM3 8a5 5 0 1110 0A5 5 0 013 8zm5 5a5 5 0 00-4.546 2.916A.5.5 0 004 16h8a.5.5 0 00.546-.084A5 5 0 008 13z"/></svg>
+        Assigned
+        <span class="nav-badge">{{ assignedCount }}</span>
+      </div>
+      <div class="nav-item" [class.active]="activeFilter === 'available'" (click)="setFilter('available')">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 1a3.5 3.5 0 110 7 3.5 3.5 0 010-7zm0 9c3.314 0 6 1.343 6 3v1H2v-1c0-1.657 2.686-3 6-3z"/></svg>
+        Available
+        <span class="nav-badge">{{ availableCount }}</span>
+      </div>
+
+      <div class="nav-section">Catalog</div>
+      <div class="nav-item" [class.active]="activeFilter === 'Phone'" (click)="setFilter('Phone')">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M5 1a1 1 0 00-1 1v12a1 1 0 001 1h6a1 1 0 001-1V2a1 1 0 00-1-1H5zm3 12a.75.75 0 110 1.5A.75.75 0 018 13z"/></svg>
+        Phones
+        <span class="nav-badge">{{ phoneCount }}</span>
+      </div>
+      <div class="nav-item" [class.active]="activeFilter === 'Tablet'" (click)="setFilter('Tablet')">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v10h10V3H3zm3 7H5v1h1v-1zm2 0H7v1h1v-1zm2 0H9v1h1v-1z"/></svg>
+        Tablets
+        <span class="nav-badge">{{ tabletCount }}</span>
+      </div>
+    </nav>
+
+    <div class="user-row">
+      <div class="avatar-sm">{{ userInitials }}</div>
+      <div>
+        <div class="user-name">{{ userName }}</div>
+        <div class="user-role-badge" [ngClass]="'role-' + userRole.toLowerCase()">{{ userRole }}</div>
+      </div>
+      <button class="logout-btn" (click)="logout()" title="Sign out">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
+          <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
+        </svg>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+
+    <div class="topbar">
+      <span class="topbar-title">Devices</span>
+      <div class="topbar-sep"></div>
+      <span class="breadcrumb">{{ filterLabel }}</span>
+
+      <div class="search-wrap">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" class="search-icon">
+          <circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l2.5 2.5"/>
+        </svg>
+        <input class="search-input" [formControl]="searchControl" placeholder="Search devices…">
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn btn-primary" *ngIf="canWrite" (click)="newDevice()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M8 3v10M3 8h10"/></svg>
+          Add device
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-label">Total devices</div>
+          <div class="stat-value">{{ devices.length }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Assigned</div>
+          <div class="stat-value">{{ assignedCount }}</div>
+          <div class="stat-sub">{{ utilisation }}% utilisation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Available</div>
+          <div class="stat-value">{{ availableCount }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Phones</div>
+          <div class="stat-value">{{ phoneCount }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tablets</div>
+          <div class="stat-value">{{ tabletCount }}</div>
+        </div>
+      </div>
+
+      <div class="table-panel-wrap">
+
+        <div class="table-wrap">
+          <div class="loading-overlay" *ngIf="loading">
+            <div class="spinner"></div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width:22%">Name</th>
+                <th style="width:14%">Manufacturer</th>
+                <th style="width:10%">Type</th>
+                <th style="width:16%">OS</th>
+                <th style="width:8%">RAM</th>
+                <th style="width:18%">Assigned to</th>
+                <th style="width:12%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of filteredDevices"
+                  (click)="selectDevice(d)"
+                  [class.row-selected]="selectedDevice?.id === d.id">
+                <td class="td-name">{{ d.name }}</td>
+                <td class="td-muted">{{ d.manufacturer }}</td>
+                <td>
+                  <span class="chip" [ngClass]="d.type === 'Phone' ? 'chip-phone' : 'chip-tablet'">{{ d.type }}</span>
+                </td>
+                <td class="td-muted">{{ d.os }} {{ d.osVersion }}</td>
+                <td class="td-muted">{{ d.ram }} GB</td>
+                <td>
+                  <div class="user-cell" *ngIf="d.assignedUserName; else noUser">
+                    <div class="avatar-xs">{{ getInitials(d.assignedUserName) }}</div>
+                    <span>{{ d.assignedUserName }}</span>
+                  </div>
+                  <ng-template #noUser><span class="td-muted">—</span></ng-template>
+                </td>
+                <td>
+                  <span class="chip" [ngClass]="d.assignedUserId ? 'chip-assigned' : 'chip-available'">
+                    <span class="dot"></span>
+                    {{ d.assignedUserId ? 'Assigned' : 'Available' }}
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="!loading && filteredDevices.length === 0">
+                <td colspan="7" class="empty-cell">No devices match your search</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="detail-panel" *ngIf="selectedDevice">
+          <div class="panel-header">
+            <button class="close-btn" (click)="closePanel()">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M3 3l10 10M13 3L3 13"/></svg>
+            </button>
+            <div class="panel-hero">
+              <div class="panel-device-icon">
+                <svg viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.5" width="18" height="18">
+                  <rect x="3" y="1" width="10" height="14" rx="1.5"/>
+                  <circle cx="8" cy="12.5" r=".8" fill="var(--accent)" stroke="none"/>
+                </svg>
+              </div>
+              <div>
+                <div class="panel-name">{{ selectedDevice.name }}</div>
+                <div class="panel-sub">{{ selectedDevice.manufacturer }}</div>
+              </div>
+            </div>
+            <div class="panel-chips">
+              <span class="chip" [ngClass]="selectedDevice.type === 'Phone' ? 'chip-phone' : 'chip-tablet'">{{ selectedDevice.type }}</span>
+              <span class="chip" [ngClass]="selectedDevice.assignedUserId ? 'chip-assigned' : 'chip-available'">
+                <span class="dot"></span>
+                {{ selectedDevice.assignedUserId ? 'Assigned' : 'Available' }}
+              </span>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="panel-section">
+              <div class="panel-section-label">Specifications</div>
+              <div class="spec-grid">
+                <div class="spec-item">
+                  <div class="spec-label">OS</div>
+                  <div class="spec-value">{{ selectedDevice.os }}</div>
+                </div>
+                <div class="spec-item">
+                  <div class="spec-label">Version</div>
+                  <div class="spec-value">{{ selectedDevice.osVersion }}</div>
+                </div>
+                <div class="spec-item">
+                  <div class="spec-label">Processor</div>
+                  <div class="spec-value">{{ selectedDevice.processor }}</div>
+                </div>
+                <div class="spec-item">
+                  <div class="spec-label">RAM</div>
+                  <div class="spec-value">{{ selectedDevice.ram }} GB</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-section" *ngIf="selectedDevice.description">
+              <div class="panel-section-label">Description</div>
+              <div class="desc-box">{{ selectedDevice.description }}</div>
+            </div>
+
+            <div class="panel-section">
+              <div class="panel-section-label">Assignment</div>
+              <div class="assigned-box" *ngIf="selectedDevice.assignedUserName; else availBox">
+                <div class="avatar-sm">{{ getInitials(selectedDevice.assignedUserName) }}</div>
+                <div>
+                  <div class="assigned-name">{{ selectedDevice.assignedUserName }}</div>
+                  <div class="assigned-since">Currently assigned</div>
+                </div>
+              </div>
+              <ng-template #availBox>
+                <div class="avail-box">This device is available for assignment.</div>
+              </ng-template>
+            </div>
+          </div>
+
+          <div class="panel-footer">
+            <button class="btn btn-full" *ngIf="canWrite" (click)="editDevice(selectedDevice.id)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/></svg>
+              Edit device
+            </button>
+
+            <button class="btn btn-full btn-danger" *ngIf="canDelete" [disabled]="actionLoading" (click)="deleteDevice(selectedDevice.id)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
+              Delete
+            </button>
+
+            <button class="btn btn-full btn-primary"
+                    *ngIf="!selectedDevice.assignedUserId"
+                    [disabled]="actionLoading"
+                    (click)="assign(selectedDevice.id)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M8 5v6m-3-3h6"/></svg>
+              Assign to me
+            </button>
+
+            <button class="btn btn-full"
+                    *ngIf="canUnassign(selectedDevice)"
+                    [disabled]="actionLoading"
+                    (click)="unassign(selectedDevice.id)">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M4 8h8"/></svg>
+              Unassign
+            </button>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
-
-  <div *ngIf="loading" class="state-msg">Loading devices...</div>
-  <div *ngIf="error" class="state-msg error">{{ error }}</div>
-
-  <table *ngIf="!loading && !error">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Manufacturer</th>
-        <th>Type</th>
-        <th>OS</th>
-        <th>RAM</th>
-        <th>Assigned To</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let device of devices" (click)="viewDevice(device.id)">
-        <td>{{ device.name }}</td>
-        <td>{{ device.manufacturer }}</td>
-        <td>{{ device.type }}</td>
-        <td>{{ device.os }} {{ device.osVersion }}</td>
-        <td>{{ device.ram }} GB</td>
-        <td>
-          <span [class]="device.assignedUserName ? 'badge assigned' : 'badge available'">
-            {{ device.assignedUserName ?? 'Available' }}
-          </span>
-        </td>
-        <td>
-          <button class="btn-danger" (click)="deleteDevice($event, device.id)">Delete</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
 </div>

@@ -1,13 +1,19 @@
 import { TestBed } from '@angular/core/testing';
+import { DeviceService } from './device.service';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
-import { Device } from './device';
-
-describe('Device', () => {
-  let service: Device;
+describe('DeviceService', () => {
+  let service: DeviceService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Device);
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
+    });
+    service = TestBed.inject(DeviceService);
   });
 
   it('should be created', () => {

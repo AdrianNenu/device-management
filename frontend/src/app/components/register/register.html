@@ -1,39 +1,62 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h1>Create account</h1>
-    <p class="subtitle">Device Management System</p>
+<div class="auth-bg">
+  <div class="auth-split">
 
-    <div *ngIf="error" class="error-msg">{{ error }}</div>
-
-    <div class="field">
-      <label>Full Name</label>
-      <input [(ngModel)]="name" placeholder="John Smith" />
-    </div>
-    <div class="field">
-      <label>Email</label>
-      <input type="email" [(ngModel)]="email" placeholder="you@example.com" />
-    </div>
-    <div class="field">
-      <label>Password</label>
-      <input type="password" [(ngModel)]="password" placeholder="••••••••" />
-    </div>
-    <div class="field">
-      <label>Role</label>
-      <select [(ngModel)]="role">
-        <option value="Employee">Employee</option>
-        <option value="Manager">Manager</option>
-        <option value="Admin">Admin</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Location</label>
-      <input [(ngModel)]="location" placeholder="e.g. London" />
+    <div class="auth-brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 16 16" fill="white" width="20" height="20">
+          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
+        </svg>
+      </div>
+      <div class="brand-name">DeviceHub</div>
+      <p class="brand-desc">Create your account and start managing your company's devices in minutes.</p>
     </div>
 
-    <button class="btn-primary" (click)="submit()" [disabled]="submitting">
-      {{ submitting ? 'Creating account...' : 'Create account' }}
-    </button>
+    <div class="auth-form-wrap">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>Create account</h1>
+          <p>Fill in your details to get started</p>
+        </div>
 
-    <p class="switch">Already have an account? <a routerLink="/login">Sign in</a></p>
+        <div class="err-banner" *ngIf="error">{{ error }}</div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Full name</label>
+            <input [(ngModel)]="name" placeholder="Jane Smith">
+          </div>
+          <div class="field">
+            <label>Location</label>
+            <input [(ngModel)]="location" placeholder="e.g. London">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Email address</label>
+          <input type="email" [(ngModel)]="email" placeholder="you@company.com">
+        </div>
+
+        <div class="field">
+          <label>Password</label>
+          <input type="password" [(ngModel)]="password" placeholder="••••••••">
+        </div>
+
+        <div class="field">
+          <label>Role</label>
+          <select [(ngModel)]="role">
+            <option value="Employee">Employee</option>
+            <option value="Manager">Manager</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+
+        <button class="btn-submit" (click)="submit()" [disabled]="submitting">
+          {{ submitting ? 'Creating account…' : 'Create account' }}
+        </button>
+
+        <p class="switch">Already have an account? <a routerLink="/login">Sign in</a></p>
+      </div>
+    </div>
+
   </div>
 </div>
