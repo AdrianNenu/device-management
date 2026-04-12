@@ -149,7 +149,7 @@ Make sure you have these installed before starting:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/device-management.git
+git clone https://github.com/AdrianNenu/device-management.git
 cd device-management
 ```
 
