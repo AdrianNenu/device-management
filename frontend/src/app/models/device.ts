@@ -22,3 +22,15 @@ export interface CreateDevice {
   ram: number;
   description: string | null;
 }
+// Strongly-typed form models for device-form — no more "as { ... }" casts
+
+export interface DeviceFormValue {
+  name:        string;
+  manufacturer: string;
+  type:        string;
+  os:          string;
+  osVersion:   string;
+  processor:   string;
+  ram:         number | null;
+  description: string | null;
+}

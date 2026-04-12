@@ -1,16 +1,17 @@
+using DeviceManagement.API.DTOs;
 using DeviceManagement.API.Models;
 
 namespace DeviceManagement.API.Interfaces;
 
 public interface IDeviceRepository
 {
-    Task<IEnumerable<Device>> GetAllAsync();
-    Task<Device?> GetByIdAsync(int id);
-    Task<Device> CreateAsync(Device device);
-    Task<Device?> UpdateAsync(int id, Device device);
+    Task<IEnumerable<DeviceDto>> GetAllAsync();
+    Task<DeviceDto?> GetByIdAsync(int id);
+    Task<DeviceDto> CreateAsync(Device device);
+    Task<DeviceDto?> UpdateAsync(int id, Device device);
     Task<bool> DeleteAsync(int id);
     Task<bool> ExistsAsync(string name, int? excludeId = null);
-    Task<Device?> AssignAsync(int deviceId, int userId);
-    Task<Device?> UnassignAsync(int deviceId);
-    Task<IEnumerable<Device>> SearchAsync(string query);
+    Task<DeviceDto?> AssignAsync(int deviceId, int userId);
+    Task<DeviceDto?> UnassignAsync(int deviceId);
+    Task<IEnumerable<DeviceDto>> SearchAsync(string query);
 }

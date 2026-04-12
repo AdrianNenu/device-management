@@ -1,4 +1,5 @@
 using DeviceManagement.API.Data;
+using DeviceManagement.API.Models; // <-- Added to access 'User'
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -9,14 +10,10 @@ namespace DeviceManagement.IntegrationTests.Helpers;
 
 public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    // Keep the connection open for the factory lifetime so SQLite doesn't
-    // destroy the in-memory database between requests within a single test.
     private readonly SqliteConnection _connection = new("DataSource=:memory:");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        // Setting the environment to "IntegrationTest" causes Program.cs to
-        // skip the SqlServer AddDbContext call, so there's nothing to conflict with.
         builder.UseEnvironment("IntegrationTest");
 
         builder.UseSetting("Jwt:Key",      "integration-test-secret-key-minimum-32-chars!");
@@ -25,7 +22,6 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
 
         builder.ConfigureServices(services =>
         {
-            // Register the SQLite-backed DbContext — the only DbContext in the container.
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(_connection));
         });
@@ -34,9 +30,35 @@ public class IntegrationTestFactory : WebApplicationFactory<Program>, IAsyncLife
     public async Task InitializeAsync()
     {
         await _connection.OpenAsync();
+       
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.EnsureCreatedAsync();
+
+        // Seed the Admin and Manager users directly into the database.
+        // This bypasses the API security rule that forces all new registrants to be "Employee".
+        if (!db.Users.Any(u => u.Email == "admin.devices@example.com"))
+        {
+            db.Users.Add(new User
+            {
+                Name = "Admin User",
+                Email = "admin.devices@example.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                Role = "Admin",
+                Location = "London"
+            });
+
+            db.Users.Add(new User
+            {
+                Name = "Manager User",
+                Email = "manager.devices@example.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Manager123!"),
+                Role = "Manager",
+                Location = "London"
+            });
+
+            await db.SaveChangesAsync();
+        }
     }
 
     public new async Task DisposeAsync()

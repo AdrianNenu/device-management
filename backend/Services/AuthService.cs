@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using DeviceManagement.API.Constants;
 using DeviceManagement.API.DTOs;
 using DeviceManagement.API.Interfaces;
 using DeviceManagement.API.Models;
@@ -11,11 +12,11 @@ namespace DeviceManagement.API.Services;
 public class AuthService
 {
     private readonly IUserRepository _users;
-    private readonly IConfiguration _config;
+    private readonly IConfiguration  _config;
 
     public AuthService(IUserRepository users, IConfiguration config)
     {
-        _users = users;
+        _users  = users;
         _config = config;
     }
 
@@ -29,7 +30,8 @@ public class AuthService
             Name         = dto.Name,
             Email        = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Role         = dto.Role,
+            // Always Employee — never trust the client for role assignment.
+            Role         = Roles.Employee,
             Location     = dto.Location
         };
 

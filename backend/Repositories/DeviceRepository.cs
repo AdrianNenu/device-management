@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using DeviceManagement.API.Data;
+using DeviceManagement.API.DTOs;
 using DeviceManagement.API.Interfaces;
 using DeviceManagement.API.Models;
 using Microsoft.EntityFrameworkCore;
@@ -10,20 +12,36 @@ public class DeviceRepository : IDeviceRepository
     private readonly AppDbContext _db;
     public DeviceRepository(AppDbContext db) => _db = db;
 
-    public async Task<IEnumerable<Device>> GetAllAsync() =>
-        await _db.Devices.Include(d => d.AssignedUser).ToListAsync();
+    // EF-translatable expression — projects in SQL, no client-side evaluation
+    private static readonly Expression<Func<Device, DeviceDto>> AsDto = d => new DeviceDto(
+        d.Id, d.Name, d.Manufacturer, d.Type,
+        d.OS, d.OSVersion, d.Processor, d.RAM,
+        d.Description, d.AssignedUserId,
+        d.AssignedUser != null ? d.AssignedUser.Name : null
+    );
 
-    public async Task<Device?> GetByIdAsync(int id) =>
-        await _db.Devices.Include(d => d.AssignedUser).FirstOrDefaultAsync(d => d.Id == id);
+    // For use after SaveChanges on a tracked entity (can't use expressions on in-memory objects)
+    private static DeviceDto ToDto(Device d) => new(
+        d.Id, d.Name, d.Manufacturer, d.Type,
+        d.OS, d.OSVersion, d.Processor, d.RAM,
+        d.Description, d.AssignedUserId, d.AssignedUser?.Name
+    );
 
-    public async Task<Device> CreateAsync(Device device)
+    public async Task<IEnumerable<DeviceDto>> GetAllAsync() =>
+        await _db.Devices.Select(AsDto).ToListAsync();
+
+    public async Task<DeviceDto?> GetByIdAsync(int id) =>
+        await _db.Devices.Where(d => d.Id == id).Select(AsDto).FirstOrDefaultAsync();
+
+    public async Task<DeviceDto> CreateAsync(Device device)
     {
         _db.Devices.Add(device);
         await _db.SaveChangesAsync();
-        return device;
+        await _db.Entry(device).Reference(d => d.AssignedUser).LoadAsync();
+        return ToDto(device);
     }
 
-    public async Task<Device?> UpdateAsync(int id, Device updated)
+    public async Task<DeviceDto?> UpdateAsync(int id, Device updated)
     {
         var device = await _db.Devices.FindAsync(id);
         if (device is null) return null;
@@ -38,14 +56,14 @@ public class DeviceRepository : IDeviceRepository
         device.Description  = updated.Description;
 
         await _db.SaveChangesAsync();
-        return device;
+        await _db.Entry(device).Reference(d => d.AssignedUser).LoadAsync();
+        return ToDto(device);
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
         var device = await _db.Devices.FindAsync(id);
         if (device is null) return false;
-
         _db.Devices.Remove(device);
         await _db.SaveChangesAsync();
         return true;
@@ -55,62 +73,65 @@ public class DeviceRepository : IDeviceRepository
         await _db.Devices.AnyAsync(d =>
             d.Name == name && (excludeId == null || d.Id != excludeId.Value));
 
-    public async Task<Device?> AssignAsync(int deviceId, int userId)
+    public async Task<DeviceDto?> AssignAsync(int deviceId, int userId)
     {
         var device = await _db.Devices.FindAsync(deviceId);
         if (device is null) return null;
-
         device.AssignedUserId = userId;
-
         await _db.SaveChangesAsync();
         await _db.Entry(device).Reference(d => d.AssignedUser).LoadAsync();
-
-        return device;
+        return ToDto(device);
     }
 
-    public async Task<Device?> UnassignAsync(int deviceId)
+    public async Task<DeviceDto?> UnassignAsync(int deviceId)
     {
         var device = await _db.Devices.FindAsync(deviceId);
         if (device is null) return null;
-
         device.AssignedUserId = null;
         device.AssignedUser   = null;
-
         await _db.SaveChangesAsync();
-        return device;
+        return ToDto(device);
     }
 
-    public async Task<IEnumerable<Device>> SearchAsync(string query)
+    /// <summary>
+    /// Full-text search delegated entirely to SQL via EF.Functions.Like.
+    /// No records are loaded into application memory — filtering happens in the database.
+    /// Scoring is approximated by ordering: name matches first, then manufacturer, then processor.
+    /// </summary>
+    public async Task<IEnumerable<DeviceDto>> SearchAsync(string query)
     {
-        if (string.IsNullOrWhiteSpace(query)) return Enumerable.Empty<Device>();
+        if (string.IsNullOrWhiteSpace(query)) return [];
 
-        var normalizedQuery = new string(query.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray());
-        var tokens = normalizedQuery.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        // Normalise: strip non-alphanumeric, lowercase, split to tokens
+        var clean  = new string(query.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray());
+        var tokens = clean.ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (tokens.Length == 0) return [];
 
-        var devices = await GetAllAsync();
+        // Build an IQueryable that only hits the DB once.
+        // Each token is OR-ed together per field using EF.Functions.Like.
+        IQueryable<Device> q = _db.Devices;
 
-        return devices
-            .Select(d =>
-            {
-                int score = 0;
-                string name  = d.Name.ToLower();
-                string mfg   = d.Manufacturer.ToLower();
-                string proc  = d.Processor.ToLower();
-                string ram   = d.RAM.ToString();
+        foreach (var token in tokens)
+        {
+            var pattern = $"%{token}%";
+            q = q.Where(d =>
+                EF.Functions.Like(d.Name.ToLower(),         pattern) ||
+                EF.Functions.Like(d.Manufacturer.ToLower(), pattern) ||
+                EF.Functions.Like(d.Processor.ToLower(),    pattern) ||
+                EF.Functions.Like(d.RAM.ToString(),         pattern));
+        }
 
-                foreach (var token in tokens)
-                {
-                    if (name.Contains(token)) score += 10;
-                    if (mfg.Contains(token))  score += 5;
-                    if (proc.Contains(token)) score += 3;
-                    if (ram == token)         score += 1;
-                }
+        // Relevance ordering in SQL: name match sorts before manufacturer, etc.
+        // CASE WHEN expressions translate to SQL CASE and run on the DB engine.
+        var ram = tokens.FirstOrDefault(t => int.TryParse(t, out _));
 
-                return new { Device = d, Score = score };
-            })
-            .Where(x => x.Score > 0)
-            .OrderByDescending(x => x.Score)
-            .ThenBy(x => x.Device.Name)
-            .Select(x => x.Device);
+        return await q
+            .OrderBy(d =>
+                EF.Functions.Like(d.Name.ToLower(), $"%{tokens[0]}%") ? 0 :
+                EF.Functions.Like(d.Manufacturer.ToLower(), $"%{tokens[0]}%") ? 1 :
+                EF.Functions.Like(d.Processor.ToLower(), $"%{tokens[0]}%") ? 2 : 3)
+            .ThenBy(d => d.Name)
+            .Select(AsDto)
+            .ToListAsync();
     }
 }

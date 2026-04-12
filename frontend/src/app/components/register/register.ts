@@ -15,7 +15,7 @@ export class RegisterComponent {
   name     = '';
   email    = '';
   password = '';
-  location = '';
+  location = '';   // role field removed entirely from the form
   submitting = false;
 
   nameError     = '';
@@ -32,29 +32,10 @@ export class RegisterComponent {
   private namePattern     = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]+$/;
   private locationPattern = /^[a-zA-ZÀ-ÖØ-öø-ÿ\s',.-]+$/;
 
-  validateName(): void {
-    if (!this.name.trim())                         { this.nameError = 'Full name is required.'; return; }
-    if (!this.namePattern.test(this.name))         { this.nameError = 'Name can only contain letters and spaces.'; return; }
-    this.nameError = '';
-  }
-
-  validateLocation(): void {
-    if (!this.location.trim())                     { this.locationError = 'Location is required.'; return; }
-    if (!this.locationPattern.test(this.location)) { this.locationError = 'Location can only contain letters and spaces.'; return; }
-    this.locationError = '';
-  }
-
-  validateEmail(): void {
-    if (!this.email.trim())                        { this.emailError = 'Email is required.'; return; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) { this.emailError = 'Enter a valid email address.'; return; }
-    this.emailError = '';
-  }
-
-  validatePassword(): void {
-    if (!this.password)           { this.passwordError = 'Password is required.'; return; }
-    if (this.password.length < 6) { this.passwordError = 'Must be at least 6 characters.'; return; }
-    this.passwordError = '';
-  }
+  validateName():     void { this.nameError     = !this.name.trim() ? 'Required.' : !this.namePattern.test(this.name) ? 'Letters and spaces only.' : ''; }
+  validateLocation(): void { this.locationError = !this.location.trim() ? 'Required.' : !this.locationPattern.test(this.location) ? 'Letters and spaces only.' : ''; }
+  validateEmail():    void { this.emailError    = !this.email.trim() ? 'Required.' : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email) ? 'Enter a valid email.' : ''; }
+  validatePassword(): void { this.passwordError = !this.password ? 'Required.' : this.password.length < 6 ? 'At least 6 characters.' : ''; }
 
   onNameChange():     void { if (this.submitted || this.nameError)     this.validateName(); }
   onLocationChange(): void { if (this.submitted || this.locationError) this.validateLocation(); }
@@ -68,30 +49,20 @@ export class RegisterComponent {
 
   submit(): void {
     this.submitted = true;
-    this.validateName();
-    this.validateEmail();
-    this.validatePassword();
-    this.validateLocation();
+    this.validateName(); this.validateEmail(); this.validatePassword(); this.validateLocation();
     this.cdr.detectChanges();
-
     if (!this.isValid) return;
 
-    this.submitting = true;
+    this.submitting  = true;
     this.serverError = '';
 
-    // Role is always Employee — roles are assigned by admins, not self-selected
-    this.auth.register({
-      name: this.name, email: this.email,
-      password: this.password, role: 'Employee', location: this.location
-    }).subscribe({
+    // Role is not sent — the backend always assigns Employee
+    this.auth.register({ name: this.name, email: this.email, password: this.password, location: this.location }).subscribe({
       next: () => this.router.navigate(['/devices']),
-      error: (err) => {
+      error: err => {
         this.submitting = false;
-        if (err.status === 409) {
-          this.emailError = 'This email address is already registered.';
-        } else {
-          this.serverError = err.error?.message ?? 'Registration failed. Please try again.';
-        }
+        if (err.status === 409) this.emailError  = 'This email is already registered.';
+        else                    this.serverError = err.error?.message ?? 'Registration failed.';
         this.cdr.detectChanges();
       }
     });

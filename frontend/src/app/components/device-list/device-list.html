@@ -1,12 +1,7 @@
 <div class="shell">
-
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 16 16" fill="white" width="15" height="15">
-          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
-        </svg>
-      </div>
+      <div class="logo-icon"><app-icon name="devices" [size]="15" [fill]="true" style="color:white"/></div>
       <div>
         <div class="logo-text">DeviceHub</div>
         <div class="logo-sub">Management Console</div>
@@ -15,26 +10,26 @@
 
     <nav class="nav">
       <div class="nav-section">Inventory</div>
-      <div class="nav-item" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
-        All devices <span class="nav-badge">{{ devices.length }}</span>
+      <div class="nav-item" [class.active]="state.filter() === 'all'" (click)="setFilter('all')">
+        <app-icon name="all" [fill]="true"/>
+        All devices <span class="nav-badge">{{ state.devices().length }}</span>
       </div>
-      <div class="nav-item" [class.active]="activeFilter === 'assigned'" (click)="setFilter('assigned')">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 1a4 4 0 100 8A4 4 0 008 1zM3 8a5 5 0 1110 0A5 5 0 013 8zm5 5a5 5 0 00-4.546 2.916A.5.5 0 004 16h8a.5.5 0 00.546-.084A5 5 0 008 13z"/></svg>
-        Assigned <span class="nav-badge">{{ assignedCount }}</span>
+      <div class="nav-item" [class.active]="state.filter() === 'assigned'" (click)="setFilter('assigned')">
+        <app-icon name="assigned" [fill]="true"/>
+        Assigned <span class="nav-badge">{{ state.assignedCount() }}</span>
       </div>
-      <div class="nav-item" [class.active]="activeFilter === 'available'" (click)="setFilter('available')">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M8 1a3.5 3.5 0 110 7 3.5 3.5 0 010-7zm0 9c3.314 0 6 1.343 6 3v1H2v-1c0-1.657 2.686-3 6-3z"/></svg>
-        Available <span class="nav-badge">{{ availableCount }}</span>
+      <div class="nav-item" [class.active]="state.filter() === 'available'" (click)="setFilter('available')">
+        <app-icon name="available" [fill]="true"/>
+        Available <span class="nav-badge">{{ state.availableCount() }}</span>
       </div>
       <div class="nav-section">Catalog</div>
-      <div class="nav-item" [class.active]="activeFilter === 'Phone'" (click)="setFilter('Phone')">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M5 1a1 1 0 00-1 1v12a1 1 0 001 1h6a1 1 0 001-1V2a1 1 0 00-1-1H5zm3 12a.75.75 0 110 1.5A.75.75 0 018 13z"/></svg>
-        Phones <span class="nav-badge">{{ phoneCount }}</span>
+      <div class="nav-item" [class.active]="state.filter() === 'Phone'" (click)="setFilter('Phone')">
+        <app-icon name="phone" [fill]="true"/>
+        Phones <span class="nav-badge">{{ state.phoneCount() }}</span>
       </div>
-      <div class="nav-item" [class.active]="activeFilter === 'Tablet'" (click)="setFilter('Tablet')">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v10h10V3H3zm3 7H5v1h1v-1zm2 0H7v1h1v-1zm2 0H9v1h1v-1z"/></svg>
-        Tablets <span class="nav-badge">{{ tabletCount }}</span>
+      <div class="nav-item" [class.active]="state.filter() === 'Tablet'" (click)="setFilter('Tablet')">
+        <app-icon name="tablet" [fill]="true"/>
+        Tablets <span class="nav-badge">{{ state.tabletCount() }}</span>
       </div>
     </nav>
 
@@ -45,9 +40,7 @@
         <div class="user-role-badge" [ngClass]="'role-' + userRole.toLowerCase()">{{ userRole }}</div>
       </div>
       <button class="logout-btn" (click)="logout()" title="Sign out">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
-          <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
-        </svg>
+        <app-icon name="logout"/>
       </button>
     </div>
   </aside>
@@ -58,57 +51,46 @@
       <div class="topbar-sep"></div>
       <span class="breadcrumb">{{ filterLabel }}</span>
       <div class="search-wrap">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14" class="search-icon">
-          <circle cx="6.5" cy="6.5" r="4"/><path d="M11 11l2.5 2.5"/>
-        </svg>
+        <app-icon name="search" class="search-icon"/>
         <input class="search-input" [formControl]="searchControl" placeholder="Search devices…">
       </div>
       <div class="topbar-actions">
         <button class="btn btn-primary" *ngIf="canWrite" (click)="newDevice()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M8 3v10M3 8h10"/></svg>
-          Add device
+          <app-icon name="add"/> Add device
         </button>
       </div>
     </div>
 
-    <!-- Toast notification -->
-    <div class="toast" *ngIf="toast" [ngClass]="'toast-' + toast.type">
-      <svg *ngIf="toast.type === 'error'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="6"/><path d="M8 5v3M8 10.5v.5"/></svg>
-      <svg *ngIf="toast.type === 'success'" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="6"/><path d="M5.5 8l2 2 3-3"/></svg>
-      {{ toast.message }}
-    </div>
+    <div class="toast" *ngIf="toast" [ngClass]="'toast-' + toast.type">{{ toast.message }}</div>
 
     <div class="content">
       <div class="stats">
         <div class="stat-card">
           <div class="stat-label">Total devices</div>
-          <div class="stat-value">{{ devices.length }}</div>
+          <div class="stat-value">{{ state.devices().length }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Assigned</div>
-          <div class="stat-value">{{ assignedCount }}</div>
-          <div class="stat-sub">{{ utilisation }}% utilisation</div>
+          <div class="stat-value">{{ state.assignedCount() }}</div>
+          <div class="stat-sub">{{ state.utilisation() }}% utilisation</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Available</div>
-          <div class="stat-value">{{ availableCount }}</div>
+          <div class="stat-value">{{ state.availableCount() }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Phones</div>
-          <div class="stat-value">{{ phoneCount }}</div>
+          <div class="stat-value">{{ state.phoneCount() }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Tablets</div>
-          <div class="stat-value">{{ tabletCount }}</div>
+          <div class="stat-value">{{ state.tabletCount() }}</div>
         </div>
       </div>
 
       <div class="table-panel-wrap">
         <div class="table-wrap">
-          <div class="loading-overlay" *ngIf="loading">
-            <div class="spinner"></div>
-          </div>
-
+          <div class="loading-overlay" *ngIf="state.loading()"><div class="spinner"></div></div>
           <table>
             <thead>
               <tr>
@@ -122,7 +104,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let d of filteredDevices"
+              <tr *ngFor="let d of state.filteredDevices()"
                   (click)="selectDevice(d)"
                   [class.row-selected]="selectedDevice?.id === d.id">
                 <td class="td-name">{{ d.name }}</td>
@@ -143,26 +125,18 @@
                   </span>
                 </td>
               </tr>
-              <tr *ngIf="!loading && filteredDevices.length === 0">
+              <tr *ngIf="!state.loading() && state.filteredDevices().length === 0">
                 <td colspan="7" class="empty-cell">No devices match your search</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Detail panel -->
         <div class="detail-panel" *ngIf="selectedDevice">
           <div class="panel-header">
-            <button class="close-btn" (click)="closePanel()">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M3 3l10 10M13 3L3 13"/></svg>
-            </button>
+            <button class="close-btn" (click)="closePanel()"><app-icon name="close"/></button>
             <div class="panel-hero">
-              <div class="panel-device-icon">
-                <svg viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.5" width="18" height="18">
-                  <rect x="3" y="1" width="10" height="14" rx="1.5"/>
-                  <circle cx="8" cy="12.5" r=".8" fill="var(--accent)" stroke="none"/>
-                </svg>
-              </div>
+              <div class="panel-device-icon"><app-icon name="mobile" [size]="18"/></div>
               <div>
                 <div class="panel-name">{{ selectedDevice.name }}</div>
                 <div class="panel-sub">{{ selectedDevice.manufacturer }}</div>
@@ -209,17 +183,14 @@
 
           <div class="panel-footer">
             <button class="btn btn-full" *ngIf="canWrite" (click)="editDevice(selectedDevice.id)">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/></svg>
-              Edit device
+              <app-icon name="edit"/> Edit device
             </button>
 
-            <!-- Inline delete confirmation — replaces confirm() -->
             <ng-container *ngIf="canDelete">
               <button class="btn btn-full btn-danger"
                       *ngIf="deletingId !== selectedDevice.id"
                       (click)="promptDelete(selectedDevice.id)">
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M3 4h10M5 4V2h6v2M6 7v5M10 7v5M4 4l1 10h6l1-10"/></svg>
-                Delete
+                <app-icon name="delete"/> Delete
               </button>
               <div class="delete-confirm" *ngIf="deletingId === selectedDevice.id">
                 <span>Are you sure?</span>
@@ -232,15 +203,13 @@
                     *ngIf="!selectedDevice.assignedUserId"
                     [disabled]="actionLoading"
                     (click)="assign(selectedDevice.id)">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M8 5v6m-3-3h6"/></svg>
-              Assign to me
+              <app-icon name="assign"/> Assign to me
             </button>
             <button class="btn btn-full"
                     *ngIf="canUnassign(selectedDevice)"
                     [disabled]="actionLoading"
                     (click)="unassign(selectedDevice.id)">
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><path d="M4 8h8"/></svg>
-              Unassign
+              <app-icon name="unassign"/> Unassign
             </button>
           </div>
         </div>

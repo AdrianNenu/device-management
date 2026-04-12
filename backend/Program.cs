@@ -16,9 +16,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Only register SqlServer when NOT running integration tests.
-// The test factory injects its own DbContext (SQLite in-memory) before this runs,
-// so skipping this registration avoids the "two providers" conflict.
 if (!builder.Environment.IsEnvironment("IntegrationTest"))
 {
     builder.Services.AddDbContext<AppDbContext>(options =>
@@ -30,13 +27,25 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngular", policy =>
         policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
-              .AllowAnyMethod());
+              .AllowAnyMethod()
+              .AllowCredentials());
+});
+
+// CSRF protection for cookie-based auth.
+// Angular's HttpClient automatically reads the XSRF-TOKEN cookie and sends
+// X-XSRF-TOKEN on every mutating request.
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName  = "X-XSRF-TOKEN"; // Angular's default header name
+    options.Cookie.Name = "XSRF-TOKEN";
+    options.Cookie.HttpOnly  = false; // Angular must read this cookie
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Strict;
 });
 
 builder.Services.AddScoped<IDeviceRepository, DeviceRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<AuthService>();
-
 builder.Services.AddHttpClient<AiService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -51,7 +60,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer              = builder.Configuration["Jwt:Issuer"],
             ValidAudience            = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey         = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is missing.")))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
+                    ?? throw new InvalidOperationException("JWT Key is missing.")))
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Cookies["auth_token"];
+                if (!string.IsNullOrEmpty(token))
+                    context.Token = token;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -61,13 +82,15 @@ app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
-        context.Response.StatusCode = 500;
+        context.Response.StatusCode  = 500;
         context.Response.ContentType = "application/json";
         var error = context.Features.Get<IExceptionHandlerFeature>();
         if (error != null)
-        {
-            await context.Response.WriteAsJsonAsync(new { message = "An internal server error occurred.", details = error.Error.Message });
-        }
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = "An internal server error occurred.",
+                details = error.Error.Message
+            });
     });
 });
 
@@ -80,6 +103,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseAntiforgery();
 app.MapControllers();
 app.MapGet("/test", () => "working");
 app.Run();
+
+public partial class Program { }

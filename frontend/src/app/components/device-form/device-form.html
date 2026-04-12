@@ -1,42 +1,26 @@
 <div class="page-shell">
-
   <aside class="sidebar">
     <div class="logo">
-      <div class="logo-icon">
-        <svg viewBox="0 0 16 16" fill="white" width="15" height="15">
-          <path d="M2 3a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm1 0v7h10V3H3zm2 9h6v1H5v-1z"/>
-        </svg>
-      </div>
-      <div>
-        <div class="logo-text">DeviceHub</div>
-        <div class="logo-sub">Management Console</div>
-      </div>
+      <div class="logo-icon"><app-icon name="devices" [size]="15" [fill]="true" style="color:white"/></div>
+      <div><div class="logo-text">DeviceHub</div><div class="logo-sub">Management Console</div></div>
     </div>
     <nav class="nav">
       <div class="nav-section">Inventory</div>
       <div class="nav-item" (click)="back()">
-        <svg viewBox="0 0 16 16" fill="currentColor" width="15" height="15"><path d="M2 2h5v5H2V2zm0 7h5v5H2V9zm7-7h5v5H9V2zm0 7h5v5H9V9z"/></svg>
-        All devices
+        <app-icon name="all" [fill]="true"/> All devices
       </div>
     </nav>
   </aside>
 
   <div class="main">
     <div class="topbar">
-      <button class="back-btn" (click)="back()">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14">
-          <path d="M10 3L5 8l5 5"/>
-        </svg>
-      </button>
+      <button class="back-btn" (click)="back()"><app-icon name="back"/></button>
       <span class="topbar-title">{{ isEdit ? 'Edit device' : 'Add device' }}</span>
-
-      <!-- Server error shown inline in the topbar so it's always visible -->
       <div class="topbar-error" *ngIf="serverError">{{ serverError }}</div>
     </div>
 
     <div class="form-content" *ngIf="!loading">
       <form [formGroup]="deviceForm" (ngSubmit)="submit()">
-
         <div class="form-layout">
 
           <div class="form-card">
@@ -44,7 +28,6 @@
               <div class="card-title">Device details</div>
               <div class="card-sub">Basic information about the device</div>
             </div>
-
             <div class="fields">
               <div class="field-row">
                 <div class="field">
@@ -60,7 +43,6 @@
                   <span class="err-msg" *ngIf="isInvalid('manufacturer')">Required</span>
                 </div>
               </div>
-
               <div class="field-row">
                 <div class="field">
                   <label class="field-label">Type</label>
@@ -78,10 +60,8 @@
                          [class.input-error]="isInvalid('ram')">
                   <span class="err-msg" *ngIf="deviceForm.get('ram')?.hasError('required') && deviceForm.get('ram')?.touched">Required</span>
                   <span class="err-msg" *ngIf="(deviceForm.get('ram')?.hasError('min') || deviceForm.get('ram')?.hasError('max')) && deviceForm.get('ram')?.touched">Must be 1–128 GB</span>
-                  <span class="err-msg" *ngIf="deviceForm.get('ram')?.hasError('pattern') && deviceForm.get('ram')?.touched">Whole numbers only</span>
                 </div>
               </div>
-
               <div class="field-row">
                 <div class="field">
                   <label class="field-label">Operating system</label>
@@ -96,7 +76,6 @@
                   <span class="err-msg" *ngIf="isInvalid('osVersion')">Required</span>
                 </div>
               </div>
-
               <div class="field">
                 <label class="field-label">Processor</label>
                 <input class="field-input" formControlName="processor" placeholder="e.g. A17 Pro"
@@ -113,12 +92,8 @@
             </div>
             <div class="fields">
               <div class="desc-actions">
-                <button type="button" class="btn btn-ai"
-                        (click)="generateDescription()"
-                        [disabled]="generatingDesc">
-                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13">
-                    <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.22 3.22l1.41 1.41M11.36 11.36l1.42 1.42M3.22 12.78l1.41-1.41M11.36 4.64l1.42-1.42"/>
-                  </svg>
+                <button type="button" class="btn btn-ai" (click)="generateDescription()" [disabled]="generatingDesc">
+                  <app-icon name="ai"/>
                   {{ generatingDesc ? 'Generating…' : 'Auto-generate with AI' }}
                 </button>
               </div>
@@ -137,12 +112,9 @@
             {{ submitting ? 'Saving…' : (isEdit ? 'Save changes' : 'Add device') }}
           </button>
         </div>
-
       </form>
     </div>
 
-    <div class="loading-full" *ngIf="loading">
-      <div class="spinner"></div>
-    </div>
+    <div class="loading-full" *ngIf="loading"><div class="spinner"></div></div>
   </div>
 </div>

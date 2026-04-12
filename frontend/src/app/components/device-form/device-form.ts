@@ -2,26 +2,43 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DeviceService, GenerateDescriptionRequest } from '../../services/device.service';
+import {
+  ReactiveFormsModule, FormBuilder, Validators,
+  FormGroup, FormControl
+} from '@angular/forms';
+import { DeviceService } from '../../services/device.service';
 import { DeviceStateService } from '../../services/device-state.service';
 import { AuthService } from '../../services/auth.service';
+import { IconComponent } from '../../components/icon/icon.component';
+import { DeviceFormValue, CreateDevice } from '../../models/device';
+
+// Typed FormGroup — perfectly matches what FormBuilder generates
+type DeviceForm = FormGroup<{
+  name:        FormControl<string>;
+  manufacturer:FormControl<string>;
+  type:        FormControl<string>;
+  os:          FormControl<string>;
+  osVersion:   FormControl<string>;
+  processor:   FormControl<string>;
+  ram:         FormControl<number | null>;
+  description: FormControl<string | null>;
+}>;
 
 @Component({
   selector: 'app-device-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './device-form.html',
   styleUrl: './device-form.scss'
 })
 export class DeviceFormComponent implements OnInit {
-  deviceForm!: FormGroup;
-  isEdit = false;
+  deviceForm!: DeviceForm;
+  isEdit       = false;
   deviceId: number | null = null;
-  submitting = false;
-  loading = false;
+  submitting   = false;
+  loading      = false;
   generatingDesc = false;
-  serverError = '';
+  serverError  = '';
 
   private fb            = inject(FormBuilder);
   private deviceService = inject(DeviceService);
@@ -31,9 +48,7 @@ export class DeviceFormComponent implements OnInit {
   private auth          = inject(AuthService);
   private cdr           = inject(ChangeDetectorRef);
 
-  // Returns true when a field is invalid AND has been touched OR the form was submitted.
-  // Drives both the red border and the error message — no clicking away required.
-  isInvalid(name: string): boolean {
+  isInvalid(name: keyof DeviceFormValue): boolean {
     const ctrl = this.deviceForm?.get(name);
     return !!(ctrl?.invalid && ctrl?.touched);
   }
@@ -45,67 +60,58 @@ export class DeviceFormComponent implements OnInit {
     }
 
     this.deviceForm = this.fb.group({
-      name:        ['', Validators.required],
-      manufacturer:['', Validators.required],
-      type:        ['', Validators.required],
-      os:          ['', Validators.required],
-      osVersion:   ['', Validators.required],
-      processor:   ['', Validators.required],
-      ram:         ['', [Validators.required, Validators.min(1), Validators.max(128), Validators.pattern('^[0-9]+$')]],
-      description: ['']
-    });
+      name:        this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      manufacturer:this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      type:        this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      os:          this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      osVersion:   this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      processor:   this.fb.control('',   { validators: [Validators.required], nonNullable: true }),
+      ram:         this.fb.control<number | null>(null, {
+                     validators: [Validators.required, Validators.min(1), Validators.max(128)]
+                   }),
+      description: this.fb.control<string | null>(null)
+    }); // No 'as' cast needed anymore!
 
-    // Mark each field as touched as soon as the user changes it so errors
-    // appear the moment the value becomes invalid, not only on blur.
     this.deviceForm.valueChanges.subscribe(() => {
       Object.keys(this.deviceForm.controls).forEach(key => {
         const ctrl = this.deviceForm.get(key);
-        if (ctrl && ctrl.dirty) ctrl.markAsTouched();
+        if (ctrl?.dirty) ctrl.markAsTouched();
       });
-      // Clear server error when the user starts correcting fields
       if (this.serverError) this.serverError = '';
       this.cdr.detectChanges();
     });
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      this.isEdit = true;
+      this.isEdit   = true;
       this.deviceId = Number(id);
-      this.loading = true;
+      this.loading  = true;
       this.deviceService.getById(this.deviceId).subscribe({
-        next: (device) => {
+        next: device => {
           this.deviceForm.patchValue(device);
           this.loading = false;
           this.cdr.detectChanges();
         },
-        error: () => {
-          this.loading = false;
-          this.router.navigate(['/devices']);
-        }
+        error: () => { this.loading = false; this.router.navigate(['/devices']); }
       });
     }
   }
 
   submit(): void {
-    // Touch every field immediately so all errors appear at once
     this.deviceForm.markAllAsTouched();
     this.cdr.detectChanges();
-
     if (this.deviceForm.invalid) return;
 
-    this.submitting = true;
+    this.submitting  = true;
     this.serverError = '';
 
-    const raw = this.deviceForm.value as {
-      name: string; manufacturer: string; type: string;
-      os: string; osVersion: string; processor: string;
-      ram: string; description: string | null;
-    };
-
-    const payload = {
-      ...raw,
-      type: raw.type.trim().charAt(0).toUpperCase() + raw.type.trim().slice(1).toLowerCase(),
-      ram: Number(raw.ram)
+    const v = this.deviceForm.getRawValue();
+    
+    // Explicitly typed as CreateDevice to satisfy API expectations
+    const payload: CreateDevice = {
+      ...v,
+      type: v.type.trim().charAt(0).toUpperCase() + v.type.trim().slice(1).toLowerCase(),
+      ram:  v.ram ?? 0
     };
 
     const req = this.isEdit && this.deviceId
@@ -118,13 +124,12 @@ export class DeviceFormComponent implements OnInit {
         this.router.navigate(['/devices']);
       },
       error: (err: HttpErrorResponse) => {
-        // Show the server error inline — no alert(), no click-away required
         if (err.status === 409) {
           this.serverError = err.error?.message ?? 'A device with this name already exists.';
         } else if (err.status === 400 && err.error?.errors) {
-          const key = Object.keys(err.error.errors as Record<string, unknown>)[0];
-          const val = (err.error.errors as Record<string, string[]>)[key];
-          this.serverError = Array.isArray(val) ? val[0] : String(val);
+          const errors = err.error.errors as Record<string, string[]>;
+          const key    = Object.keys(errors)[0];
+          this.serverError = errors[key]?.[0] ?? 'Validation error.';
         } else {
           this.serverError = err.error?.message ?? 'An error occurred while saving.';
         }
@@ -135,23 +140,27 @@ export class DeviceFormComponent implements OnInit {
   }
 
   generateDescription(): void {
-    const required = ['name', 'manufacturer', 'type', 'os', 'osVersion', 'processor', 'ram'];
+    const required: (keyof DeviceFormValue)[] = ['name', 'manufacturer', 'type', 'os', 'osVersion', 'processor', 'ram'];
     if (required.some(k => this.deviceForm.get(k)?.invalid)) {
       this.deviceForm.markAllAsTouched();
       this.cdr.detectChanges();
       return;
     }
+
     this.generatingDesc = true;
-    const v = this.deviceForm.value as GenerateDescriptionRequest & { ram: string };
-    this.deviceService.generateDescription({ ...v, ram: Number(v.ram) }).subscribe({
+    const v = this.deviceForm.getRawValue();
+
+    this.deviceService.generateDescription({
+      name: v.name, manufacturer: v.manufacturer, type: v.type,
+      os: v.os, osVersion: v.osVersion, processor: v.processor, ram: v.ram ?? 0
+    }).subscribe({
       next: (res: { description: string }) => {
         this.deviceForm.patchValue({ description: res.description });
         this.generatingDesc = false;
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
-        // Show the exact message from the API (Gemini error, network error, etc.)
-        this.serverError = err.error?.message ?? `AI generation failed (${err.status})`;
+        this.serverError    = err.error?.message ?? `AI generation failed (${err.status})`;
         this.generatingDesc = false;
         this.cdr.detectChanges();
       }

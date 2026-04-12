@@ -1,3 +1,4 @@
+using DeviceManagement.API.Constants;
 using DeviceManagement.API.DTOs;
 using DeviceManagement.API.Interfaces;
 using DeviceManagement.API.Models;
@@ -13,28 +14,20 @@ namespace DeviceManagement.API.Controllers;
 public class DevicesController : ControllerBase
 {
     private readonly IDeviceRepository _repo;
-
     public DevicesController(IDeviceRepository repo) => _repo = repo;
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetAll()
-    {
-        var devices = await _repo.GetAllAsync();
-        return Ok(devices.Select(ToDto));
-    }
+    public async Task<IActionResult> GetAll() =>
+        Ok(await _repo.GetAllAsync());
 
     [HttpGet("search")]
     [Authorize]
     public async Task<IActionResult> Search([FromQuery] string q)
     {
         if (string.IsNullOrWhiteSpace(q))
-        {
-            var all = await _repo.GetAllAsync();
-            return Ok(all.Select(ToDto));
-        }
-        var devices = await _repo.SearchAsync(q);
-        return Ok(devices.Select(ToDto));
+            return Ok(await _repo.GetAllAsync());
+        return Ok(await _repo.SearchAsync(q));
     }
 
     [HttpGet("{id}")]
@@ -42,7 +35,7 @@ public class DevicesController : ControllerBase
     public async Task<IActionResult> GetById(int id)
     {
         var device = await _repo.GetByIdAsync(id);
-        return device is null ? NotFound() : Ok(ToDto(device));
+        return device is null ? NotFound() : Ok(device);
     }
 
     [HttpPost("generate-description")]
@@ -56,19 +49,12 @@ public class DevicesController : ControllerBase
             var description = await aiService.GenerateDescriptionAsync(dto);
             return Ok(new { description });
         }
-        catch (HttpRequestException ex)
-        {
-            // Return the Gemini error message directly — it's safe and descriptive
-            return StatusCode(502, new { message = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { message = ex.Message });
-        }
+        catch (HttpRequestException ex) { return StatusCode(502, new { message = ex.Message }); }
+        catch (Exception ex)            { return StatusCode(500, new { message = ex.Message }); }
     }
 
     [HttpPost]
-    [Authorize(Roles = "Manager,Admin")]
+    [Authorize(Roles = Roles.ManagerOrAdmin)]
     public async Task<IActionResult> Create([FromBody] CreateDeviceDto dto)
     {
         if (await _repo.ExistsAsync(dto.Name))
@@ -78,7 +64,7 @@ public class DevicesController : ControllerBase
         {
             Name         = dto.Name,
             Manufacturer = dto.Manufacturer,
-            Type         = NormalizeType(dto.Type),
+            Type         = dto.NormalizedType,   // normalisation from DTO property
             OS           = dto.OS,
             OSVersion    = dto.OSVersion,
             Processor    = dto.Processor,
@@ -87,11 +73,11 @@ public class DevicesController : ControllerBase
         };
 
         var created = await _repo.CreateAsync(device);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, ToDto(created));
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager,Admin")]
+    [Authorize(Roles = Roles.ManagerOrAdmin)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateDeviceDto dto)
     {
         if (await _repo.ExistsAsync(dto.Name, excludeId: id))
@@ -101,7 +87,7 @@ public class DevicesController : ControllerBase
         {
             Name         = dto.Name,
             Manufacturer = dto.Manufacturer,
-            Type         = NormalizeType(dto.Type),
+            Type         = dto.NormalizedType,
             OS           = dto.OS,
             OSVersion    = dto.OSVersion,
             Processor    = dto.Processor,
@@ -110,11 +96,11 @@ public class DevicesController : ControllerBase
         };
 
         var result = await _repo.UpdateAsync(id, updated);
-        return result is null ? NotFound() : Ok(ToDto(result));
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _repo.DeleteAsync(id);
@@ -135,7 +121,7 @@ public class DevicesController : ControllerBase
             return Conflict(new { message = "Device is already assigned to someone." });
 
         var result = await _repo.AssignAsync(id, userId);
-        return result is null ? NotFound() : Ok(ToDto(result));
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost("{id}/unassign")]
@@ -150,19 +136,11 @@ public class DevicesController : ControllerBase
         var device = await _repo.GetByIdAsync(id);
         if (device is null) return NotFound();
 
-        if (role == "Employee" && device.AssignedUserId != userId)
+        if (role == Roles.Employee && device.AssignedUserId != userId)
             return Forbid();
 
         var result = await _repo.UnassignAsync(id);
-        return result is null ? NotFound() : Ok(ToDto(result));
+        return result is null ? NotFound() : Ok(result);
     }
-
-    private static string NormalizeType(string type) =>
-        string.IsNullOrWhiteSpace(type) ? type : char.ToUpper(type[0]) + type.Substring(1).ToLower();
-
-    private static DeviceDto ToDto(Device d) => new(
-        d.Id, d.Name, d.Manufacturer, d.Type,
-        d.OS, d.OSVersion, d.Processor, d.RAM,
-        d.Description, d.AssignedUserId, d.AssignedUser?.Name
-    );
+    // NormalizeType removed — it now lives as a property on CreateDeviceDto/UpdateDeviceDto
 }
