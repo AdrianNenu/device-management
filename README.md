@@ -45,7 +45,7 @@ The application is split into three parts that work together:
 | Layer | Technology |
 |---|---|
 | Database | Microsoft SQL Server (Express or full) |
-| Backend | C# · ASP.NET Core 9 · Entity Framework Core |
+| Backend | C# · ASP.NET Core 10 · Entity Framework Core |
 | Authentication | JWT stored in an HttpOnly cookie + CSRF protection |
 | AI Integration | Google Gemini 2.5 Flash |
 | Frontend | Angular 21 · Angular Material · SCSS |
@@ -123,9 +123,12 @@ device-management/
 | Action | Employee | Manager | Admin |
 |---|:---:|:---:|:---:|
 | View all devices | ✅ | ✅ | ✅ |
-| Assign / unassign own device | ✅ | ✅ | ✅ |
+| Search devices | ✅ | ✅ | ✅ |
+| Assign device to self | ✅ | ✅ | ✅ |
+| Unassign own device | ✅ | ✅ | ✅ |
+| Unassign any device | ❌ | ✅ | ✅ |
 | Add / edit devices | ❌ | ✅ | ✅ |
-| Delete devices | ❌ | ✅ | ✅ |
+| Delete devices | ❌ | ❌ | ✅ |
 
 ---
 
