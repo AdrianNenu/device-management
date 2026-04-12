@@ -18,7 +18,7 @@ public class AppDbContext : DbContext
              .HasConversion<string>()
              .HasMaxLength(20);
 
-            e.HasCheckConstraint("CK_Device_Type", "[Type] IN ('Phone', 'Tablet')");
+            e.ToTable(t => t.HasCheckConstraint("CK_Device_Type", "[Type] IN ('Phone', 'Tablet')"));
 
             e.HasOne(d => d.AssignedUser)
              .WithMany(u => u.Devices)

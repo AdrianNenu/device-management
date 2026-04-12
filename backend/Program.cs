@@ -16,8 +16,14 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Only register SqlServer when NOT running integration tests.
+// The test factory injects its own DbContext (SQLite in-memory) before this runs,
+// so skipping this registration avoids the "two providers" conflict.
+if (!builder.Environment.IsEnvironment("IntegrationTest"))
+{
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 builder.Services.AddCors(options =>
 {
